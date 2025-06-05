@@ -1,0 +1,92 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', sans-serif;
+  @apply bg-gray-900 text-gray-100;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600;
+}
+
+.card {
+  @apply bg-gray-800 border border-gray-700 rounded-xl shadow-lg transition-all duration-300;
+}
+
+.card:hover {
+  @apply shadow-xl border-gray-600;
+}
+
+.stat-card {
+  @apply p-4 rounded-lg flex flex-col space-y-2;
+}
+
+.stat-value {
+  @apply text-2xl font-bold;
+}
+
+.stat-label {
+  @apply text-sm text-gray-400;
+}
+
+.animate-pulse-slow {
+  animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.chart-container {
+  @apply h-64 w-full rounded-lg overflow-hidden;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+.btn {
+  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center;
+}
+
+.btn-primary {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white;
+}
+
+.btn-secondary {
+  @apply bg-gray-700 hover:bg-gray-600 text-white;
+}
+
+.btn-success {
+  @apply bg-emerald-600 hover:bg-emerald-700 text-white;
+}
+
+.btn-danger {
+  @apply bg-rose-600 hover:bg-rose-700 text-white;
+}
+
+.btn-ghost {
+  @apply bg-transparent hover:bg-gray-800 text-gray-300;
+}
