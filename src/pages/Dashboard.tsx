@@ -1,10 +1,119 @@
-import React from 'react';
+import React, { useState } from 'react';
 import MarketOverview from '../components/dashboard/MarketOverview';
 import AIInsights from '../components/dashboard/AIInsights';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
-import { LineChart, BarChart3, PieChart, Gauge, BrainCircuit } from 'lucide-react';
+import { LineChart, BarChart3, PieChart, Gauge, BrainCircuit, Send } from 'lucide-react';
+
+interface Message {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+}
 
 const Dashboard: React.FC = () => {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      content: 'Welcome to HyperTrade. How can I assist with your trading today?',
+      isUser: false,
+      timestamp: new Date(Date.now() - 300000) // 5 minutes ago
+    },
+    {
+      id: '2',
+      content: "What's the current network status?",
+      isUser: true,
+      timestamp: new Date(Date.now() - 240000) // 4 minutes ago
+    },
+    {
+      id: '3',
+      content: 'Hyperion network is running optimally with 1,240 TPS and 2.1s block time. All systems operational with parallel execution at 94% efficiency.',
+      isUser: false,
+      timestamp: new Date(Date.now() - 180000) // 3 minutes ago
+    }
+  ]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+
+  const generateAIResponse = (userMessage: string): string => {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    // Market-related responses
+    if (lowerMessage.includes('price') || lowerMessage.includes('market')) {
+      return `Based on current market analysis, BTC is at $64,273 (+2.4%), ETH at $3,124 (+1.7%), and METIS at $45.67 (+8.3%). The overall market sentiment is bullish with increased trading volume across all major pairs.`;
+    }
+    
+    // Portfolio-related responses
+    if (lowerMessage.includes('portfolio') || lowerMessage.includes('balance')) {
+      return `Your current portfolio value is $77,583.76 with a 24h gain of +$3,241.52 (+4.3%). Your allocation is well-diversified across BTC (35%), ETH (19%), HYPR (40%), and USDC (6%). Consider rebalancing if HYPR continues its strong performance.`;
+    }
+    
+    // Trading strategy responses
+    if (lowerMessage.includes('strategy') || lowerMessage.includes('trade') || lowerMessage.includes('buy') || lowerMessage.includes('sell')) {
+      return `I recommend a momentum-based approach given current market conditions. Your active AI strategies are performing well with a 68% win rate. Consider increasing position sizes on HYPR due to strong fundamentals and network growth.`;
+    }
+    
+    // Network/technical responses
+    if (lowerMessage.includes('network') || lowerMessage.includes('hyperion') || lowerMessage.includes('gas') || lowerMessage.includes('fees')) {
+      return `Hyperion network is operating at peak efficiency: 1,240 TPS, 2.1s average block time, and minimal gas fees at 0.00012 HYPR. Parallel execution is running at 94% capacity, perfect for high-frequency trading strategies.`;
+    }
+    
+    // Risk management responses
+    if (lowerMessage.includes('risk') || lowerMessage.includes('loss') || lowerMessage.includes('stop')) {
+      return `Your current risk profile is set to aggressive with a portfolio risk score of Medium. I suggest implementing stop-losses at -2% for volatile positions and taking partial profits on gains exceeding 15%. Diversification across 4 assets provides good risk distribution.`;
+    }
+    
+    // AI/Alith specific responses
+    if (lowerMessage.includes('ai') || lowerMessage.includes('alith') || lowerMessage.includes('help')) {
+      return `I'm Alith, your AI trading assistant powered by Hyperion's on-chain intelligence. I can help with market analysis, portfolio optimization, risk management, and strategy development. What specific aspect of your trading would you like to explore?`;
+    }
+    
+    // Default responses for general queries
+    const defaultResponses = [
+      `I'm analyzing current market conditions and on-chain data to provide you with the most accurate insights. What specific information would you like me to focus on?`,
+      `Based on Hyperion's parallel execution capabilities, I can process multiple data streams simultaneously. How can I assist with your trading decisions today?`,
+      `I'm continuously monitoring market sentiment, price movements, and network activity. Is there a particular asset or strategy you'd like me to analyze?`,
+      `Using advanced AI algorithms, I can help optimize your trading performance. What would you like to know about your current positions or market opportunities?`
+    ];
+    
+    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  };
+
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: inputMessage,
+      isUser: true,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsTyping(true);
+
+    // Simulate AI thinking time
+    setTimeout(() => {
+      const aiResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        content: generateAIResponse(inputMessage),
+        isUser: false,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, aiResponse]);
+      setIsTyping(false);
+    }, 1500 + Math.random() * 1000); // 1.5-2.5 seconds delay
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
   return (
     <div>
       <div className="mb-6">
@@ -72,48 +181,88 @@ const Dashboard: React.FC = () => {
             <div className="flex items-center space-x-2 mb-4">
               <BrainCircuit size={18} className="text-indigo-400" />
               <h3 className="font-medium">Alith AI Assistant</h3>
-            </div>
-            
-            <div className="h-64 p-4 bg-gray-800 rounded-lg overflow-y-auto scrollbar-thin">
-              <div className="space-y-3">
-                <div className="flex space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium">
-                    A
-                  </div>
-                  <div className="bg-gray-700 rounded-lg p-2.5 max-w-[80%]">
-                    <p className="text-sm">Welcome to HyperTrade. How can I assist with your trading today?</p>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2 justify-end">
-                  <div className="bg-indigo-600/20 text-indigo-100 rounded-lg p-2.5 max-w-[80%]">
-                    <p className="text-sm">What's the current network status?</p>
-                  </div>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium">
-                    U
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium">
-                    A
-                  </div>
-                  <div className="bg-gray-700 rounded-lg p-2.5 max-w-[80%]">
-                    <p className="text-sm">Hyperion network is running optimally with 1,240 TPS and 2.1s block time. All systems operational with parallel execution at 94% efficiency.</p>
-                  </div>
+              <div className="ml-auto">
+                <div className="flex items-center space-x-1">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-xs text-green-500">Online</span>
                 </div>
               </div>
             </div>
             
+            <div className="h-64 p-4 bg-gray-800 rounded-lg overflow-y-auto scrollbar-thin">
+              <div className="space-y-3">
+                {messages.map((message) => (
+                  <div key={message.id} className={`flex space-x-2 ${message.isUser ? 'justify-end' : ''}`}>
+                    {!message.isUser && (
+                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
+                        A
+                      </div>
+                    )}
+                    <div className={`rounded-lg p-2.5 max-w-[85%] ${
+                      message.isUser 
+                        ? 'bg-indigo-600/20 text-indigo-100' 
+                        : 'bg-gray-700'
+                    }`}>
+                      <p className="text-sm">{message.content}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    {message.isUser && (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
+                        U
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {isTyping && (
+                  <div className="flex space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium text-sm">
+                      A
+                    </div>
+                    <div className="bg-gray-700 rounded-lg p-2.5">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
             <div className="mt-4 relative">
-              <input
-                type="text"
-                placeholder="Ask Alith about market conditions..."
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2.5 pl-4 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+              <textarea
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask Alith about market conditions, strategies, or portfolio optimization..."
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2.5 pl-4 pr-12 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                rows={2}
+                disabled={isTyping}
               />
-              <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-indigo-400 hover:text-indigo-300">
-                <BrainCircuit size={18} />
+              <button
+                onClick={handleSendMessage}
+                disabled={!inputMessage.trim() || isTyping}
+                className="absolute right-3 bottom-3 p-1.5 text-indigo-400 hover:text-indigo-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+              >
+                <Send size={16} />
               </button>
+            </div>
+            
+            <div className="mt-2 flex flex-wrap gap-1">
+              {['Market analysis', 'Portfolio review', 'Risk assessment', 'Strategy suggestions'].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => setInputMessage(suggestion)}
+                  className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 transition-colors"
+                  disabled={isTyping}
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
           </div>
         </div>
