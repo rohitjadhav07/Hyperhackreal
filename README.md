@@ -289,12 +289,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **React Community** - For the amazing ecosystem
 - **Tailwind CSS** - For the utility-first CSS framework
 
-## 📞 Support
-
-- **Documentation**: [docs.hypertrade.ai](https://docs.hypertrade.ai)
-- **Discord**: [Join our community](https://discord.gg/hypertrade)
-- **Twitter**: [@HyperTradeAI](https://twitter.com/HyperTradeAI)
-- **Email**: support@hypertrade.ai
+## Connect
+rohitjadhav45074507@gmail.com
 
 ## 🗺 Roadmap
 
