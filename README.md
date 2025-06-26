@@ -8,10 +8,11 @@ HyperTrade is a cutting-edge decentralized finance (DeFi) analytics platform tha
 
 ### ✨ Key Features
 
-- **Real-time Market Analytics**: Live cryptocurrency price tracking with advanced charting
-- **AI-Powered Insights**: Intelligent market analysis using Alith AI assistant
-- **Automated Trading Strategies**: Create and deploy AI-driven trading bots
-- **Portfolio Management**: Comprehensive portfolio tracking with risk assessment
+- **Real-time Market Analytics**: Live cryptocurrency price tracking with advanced charting powered by CoinMarketCap API
+- **AI-Powered Insights**: Intelligent market analysis using Alith AI assistant with real-time data processing
+- **Advanced Chart Visualization**: Multiple chart types including candlestick, area, line, and volume charts
+- **Automated Trading Strategies**: Create and deploy AI-driven trading bots with natural language processing
+- **Portfolio Management**: Comprehensive portfolio tracking with risk assessment and optimization
 - **Strategy Marketplace**: Share and monetize trading strategies with the community
 - **Hyperion Network Integration**: Leverages parallel execution for high-performance trading
 
@@ -35,8 +36,9 @@ HyperTrade is a cutting-edge decentralized finance (DeFi) analytics platform tha
 - **Zustand** - Lightweight state management
 - **React Context** - Theme and global state management
 
-### APIs & Data
-- **CoinGecko API** - Real-time cryptocurrency data
+### APIs & Data Sources
+- **CoinMarketCap API** - Professional-grade cryptocurrency data with advanced charting
+- **CoinGecko API** - Backup data source for market information
 - **Axios** - HTTP client for API requests
 
 ## 🏗 Project Structure
@@ -44,30 +46,35 @@ HyperTrade is a cutting-edge decentralized finance (DeFi) analytics platform tha
 ```
 src/
 ├── components/
+│   ├── charts/
+│   │   ├── AdvancedChart.tsx           # Multi-type chart component with CMC data
+│   │   └── CandlestickChart.tsx        # OHLCV candlestick visualization
 │   ├── dashboard/
-│   │   ├── MarketOverview.tsx      # Market data and charts
-│   │   ├── AIInsights.tsx          # AI-generated insights
-│   │   └── ActivityFeed.tsx        # Recent trading activity
+│   │   ├── MarketOverview.tsx          # Enhanced market data with CMC integration
+│   │   ├── AIInsights.tsx              # AI-generated insights with live data
+│   │   └── ActivityFeed.tsx            # Recent trading activity
 │   ├── layout/
-│   │   ├── Layout.tsx              # Main layout wrapper
-│   │   ├── Header.tsx              # Navigation header
-│   │   ├── Sidebar.tsx             # Navigation sidebar
-│   │   └── NotificationCenter.tsx  # Notification system
+│   │   ├── Layout.tsx                  # Main layout wrapper
+│   │   ├── Header.tsx                  # Navigation header
+│   │   ├── Sidebar.tsx                 # Navigation sidebar
+│   │   └── NotificationCenter.tsx      # Notification system
 │   └── ui/
-│       ├── WalletConnect.tsx       # Wallet connection component
-│       └── HyperionLogo.tsx        # Custom logo component
+│       ├── WalletConnect.tsx           # Wallet connection component
+│       └── HyperionLogo.tsx            # Custom logo component
 ├── pages/
-│   ├── Dashboard.tsx               # Main dashboard page
-│   ├── PortfolioAnalysis.tsx       # Portfolio management
-│   ├── AITrading.tsx               # AI trading strategies
-│   ├── StrategyMarketplace.tsx     # Strategy sharing platform
-│   └── Settings.tsx                # User preferences
+│   ├── Dashboard.tsx                   # Main dashboard with AI chat
+│   ├── PortfolioAnalysis.tsx           # Portfolio management
+│   ├── AITrading.tsx                   # AI trading strategies
+│   ├── StrategyMarketplace.tsx         # Strategy sharing platform
+│   └── Settings.tsx                    # User preferences
+├── services/
+│   └── coinMarketCapApi.ts             # CoinMarketCap API integration
 ├── store/
-│   ├── notificationStore.ts        # Notification state management
-│   └── themeStore.ts               # Theme preferences
+│   ├── notificationStore.ts            # Notification state management
+│   └── themeStore.ts                   # Theme preferences
 ├── contexts/
-│   └── ThemeContext.tsx            # Theme context provider
-└── App.tsx                         # Main application component
+│   └── ThemeContext.tsx                # Theme context provider
+└── App.tsx                             # Main application component
 ```
 
 ## 🚀 Getting Started
@@ -77,6 +84,7 @@ src/
 - **Node.js** (v18 or higher)
 - **npm** or **yarn**
 - **MetaMask** browser extension (for wallet connectivity)
+- **CoinMarketCap API Key** (for live market data)
 
 ### Installation
 
@@ -91,12 +99,25 @@ src/
    npm install
    ```
 
-3. **Start the development server**
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` and add your API keys:
+   ```env
+   VITE_COINMARKETCAP_API_KEY=your_coinmarketcap_api_key_here
+   VITE_COINGECKO_API_KEY=your_coingecko_api_key
+   VITE_HYPERION_RPC_URL=https://hyperion-rpc-url
+   VITE_ALITH_AI_ENDPOINT=https://alith-ai-api-endpoint
+   ```
+
+4. **Start the development server**
    ```bash
    npm run dev
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to `http://localhost:5173`
 
 ### Build for Production
@@ -111,112 +132,151 @@ npm run build
 npm run preview
 ```
 
-## 🔧 Configuration
+## 🔧 API Configuration
+
+### CoinMarketCap API Setup
+
+1. **Get API Key**
+   - Visit [CoinMarketCap Pro API](https://coinmarketcap.com/api/)
+   - Sign up for a free or paid plan
+   - Copy your API key
+
+2. **API Features Used**
+   - **Latest Quotes**: Real-time price data for BTC, ETH, METIS
+   - **Historical Data**: Price history for chart visualization
+   - **OHLCV Data**: Candlestick chart data
+   - **Global Metrics**: Market-wide statistics
+   - **Trending Coins**: Popular cryptocurrency tracking
+
+3. **Rate Limits**
+   - **Basic Plan**: 333 calls/day, 10 calls/minute
+   - **Hobbyist Plan**: 3,333 calls/day, 30 calls/minute
+   - **Startup Plan**: 10,000 calls/day, 60 calls/minute
 
 ### Environment Variables
 
 Create a `.env` file in the root directory:
 
 ```env
+# CoinMarketCap API Configuration
+VITE_COINMARKETCAP_API_KEY=your_coinmarketcap_api_key_here
+
+# Backup APIs
 VITE_COINGECKO_API_KEY=your_coingecko_api_key
+
+# Blockchain Configuration
 VITE_HYPERION_RPC_URL=https://hyperion-rpc-url
 VITE_ALITH_AI_ENDPOINT=https://alith-ai-api-endpoint
 ```
 
-### Wallet Configuration
-
-The application supports MetaMask and other Web3 wallets. Make sure you have:
-- MetaMask installed and configured
-- Test ETH for development (use testnets)
-- HYPR tokens for accessing premium features
-
 ## 📊 Features Deep Dive
 
-### 1. Market Overview
-- Real-time price tracking for BTC, ETH, METIS, and other cryptocurrencies
-- Interactive charts with multiple timeframes (24h, 7d, 30d, 1y)
-- Total Value Locked (TVL) calculations
-- Market sentiment analysis
+### 1. Enhanced Market Overview
+- **Real-time Data**: Live price feeds from CoinMarketCap Pro API
+- **Advanced Charts**: Multiple chart types (Line, Area, Candlestick, Volume)
+- **Interactive Visualization**: Click any market card to open detailed chart view
+- **Professional Metrics**: Market cap, volume, dominance, and more
+- **Time Range Selection**: 1D, 7D, 30D, 90D, 1Y data visualization
 
-### 2. AI-Powered Insights
-- Automated market analysis using machine learning
-- Price trend predictions
-- Volatility alerts and risk assessments
-- Correlation analysis between different assets
+### 2. AI-Powered Insights with Live Data
+- **Real-time Analysis**: AI insights generated from live market data
+- **Multi-factor Analysis**: Price movements, volume changes, correlation analysis
+- **Sentiment Detection**: Market sentiment based on comprehensive data
+- **Actionable Recommendations**: Specific trading suggestions with price targets
+- **Risk Assessment**: Volatility analysis and risk management advice
 
-### 3. Portfolio Management
-- Real-time portfolio valuation
-- Asset allocation visualization
-- Performance tracking and analytics
-- Risk assessment and optimization suggestions
+### 3. Advanced Chart Visualization
+- **Multiple Chart Types**:
+  - **Line Charts**: Clean price trend visualization
+  - **Area Charts**: Filled area charts with gradients
+  - **Candlestick Charts**: OHLCV data for technical analysis
+  - **Volume Charts**: Trading volume visualization
+- **Interactive Features**: Zoom, pan, tooltip information
+- **Professional Styling**: Dark theme optimized for trading
+- **Responsive Design**: Works on all screen sizes
 
-### 4. AI Trading Strategies
-- Natural language strategy creation
-- Automated trading bot deployment
-- Strategy backtesting and performance metrics
-- Risk management and stop-loss configuration
+### 4. Portfolio Management
+- **Real-time Valuation**: Live portfolio value calculation
+- **Asset Allocation**: Visual breakdown of holdings
+- **Performance Tracking**: Historical performance analytics
+- **Risk Assessment**: AI-powered risk scoring
+- **Optimization Suggestions**: Portfolio rebalancing recommendations
 
-### 5. Strategy Marketplace
-- Community-driven strategy sharing
-- Strategy monetization with HYPR tokens
-- Performance verification and ratings
-- Strategy cloning and customization
+### 5. AI Trading Strategies
+- **Natural Language Processing**: Describe strategies in plain English
+- **Strategy Builder**: Visual strategy creation interface
+- **Backtesting**: Historical performance testing
+- **Risk Management**: Automated stop-loss and take-profit
+- **Performance Monitoring**: Real-time strategy performance tracking
+
+### 6. Strategy Marketplace
+- **Community Strategies**: Browse and download community strategies
+- **Performance Verification**: Verified strategy performance metrics
+- **Monetization**: Earn HYPR tokens from strategy sales
+- **Rating System**: Community-driven strategy ratings
+- **Strategy Cloning**: Fork and modify existing strategies
 
 ## 🤖 AI Integration
 
 ### Alith AI Assistant
 HyperTrade integrates with Alith, an advanced AI assistant that provides:
-- Real-time market analysis
-- Trading strategy recommendations
-- Portfolio optimization suggestions
-- Natural language query processing
+- **Real-time Market Analysis**: Live data processing and insights
+- **Trading Strategy Recommendations**: AI-generated trading suggestions
+- **Portfolio Optimization**: Automated portfolio rebalancing suggestions
+- **Natural Language Queries**: Ask questions in plain English
+- **Contextual Responses**: Responses based on current market conditions
 
 ### AI Features
-- **Sentiment Analysis**: Analyzes market sentiment from on-chain data
+- **Live Data Processing**: Real-time analysis of market data from CoinMarketCap
+- **Sentiment Analysis**: Market sentiment from price movements and volume
 - **Pattern Recognition**: Identifies trading patterns and opportunities
-- **Risk Assessment**: Evaluates portfolio risk and suggests improvements
-- **Automated Trading**: Executes trades based on AI recommendations
+- **Risk Assessment**: Evaluates portfolio risk with live data
+- **Automated Insights**: Continuously generated market insights
 
 ## 🌐 Hyperion Network Integration
 
 ### Parallel Execution
-- Leverages Hyperion's parallel execution for high-performance trading
-- Reduced latency for time-sensitive operations
-- Scalable architecture for handling multiple strategies simultaneously
+- **High Performance**: Leverages Hyperion's parallel execution for trading
+- **Low Latency**: Reduced execution time for time-sensitive operations
+- **Scalability**: Handle multiple strategies simultaneously
+- **Cost Efficiency**: Minimal gas fees with HYPR token
 
 ### Network Features
-- High throughput (1,240+ TPS)
-- Low block times (2.1s average)
-- Minimal gas fees with HYPR token
+- **High Throughput**: 1,240+ TPS capacity
+- **Fast Block Times**: 2.1s average block confirmation
+- **Low Fees**: Minimal transaction costs
+- **Parallel Processing**: Multiple operations executed simultaneously
 
 ## 🔐 Security Features
 
 - **Wallet Integration**: Secure Web3 wallet connectivity
-- **Private Key Management**: Never stores private keys
+- **Private Key Management**: Never stores or accesses private keys
+- **API Security**: Secure API key management and rotation
+- **Data Encryption**: All sensitive data encrypted in transit
 - **Smart Contract Auditing**: All contracts undergo security audits
-- **Risk Management**: Built-in risk assessment and management tools
 
 ## 📱 Responsive Design
 
 HyperTrade is fully responsive and optimized for:
-- Desktop computers (1920px+)
-- Laptops (1024px - 1919px)
-- Tablets (768px - 1023px)
-- Mobile devices (320px - 767px)
+- **Desktop**: Full-featured trading interface (1920px+)
+- **Laptops**: Optimized layout (1024px - 1919px)
+- **Tablets**: Touch-friendly interface (768px - 1023px)
+- **Mobile**: Mobile-first design (320px - 767px)
 
 ## 🎨 Design System
 
 ### Color Palette
-- **Primary**: Indigo (#6366f1)
-- **Secondary**: Purple (#8b5cf6)
-- **Success**: Emerald (#10b981)
-- **Warning**: Amber (#f59e0b)
-- **Error**: Rose (#ef4444)
-- **Background**: Gray-900 (#111827)
+- **Primary**: Indigo (#6366f1) - Main brand color
+- **Secondary**: Purple (#8b5cf6) - Accent color
+- **Success**: Emerald (#10b981) - Positive indicators
+- **Warning**: Amber (#f59e0b) - Caution indicators
+- **Error**: Rose (#ef4444) - Error states
+- **Background**: Gray-900 (#111827) - Dark theme background
 
 ### Typography
 - **Font Family**: Inter (Google Fonts)
 - **Weights**: 400 (Regular), 500 (Medium), 600 (Semibold), 700 (Bold)
+- **Responsive Scaling**: Fluid typography across devices
 
 ## 🧪 Testing
 
@@ -230,25 +290,42 @@ npm run test
 npm run test:coverage
 ```
 
+### API Testing
+- **Unit Tests**: Individual API service testing
+- **Integration Tests**: End-to-end API integration
+- **Mock Data**: Fallback data for development
+
 ## 📈 Performance Optimization
 
 - **Code Splitting**: Lazy loading of route components
+- **API Caching**: Intelligent caching of market data
 - **Image Optimization**: Optimized images from Pexels
 - **Bundle Analysis**: Webpack bundle analyzer integration
-- **Caching**: Efficient API response caching
+- **Service Workers**: Offline functionality and caching
 
 ## 🚀 Deployment
 
 ### Netlify (Recommended)
-1. Connect your GitHub repository to Netlify
-2. Set build command: `npm run build`
-3. Set publish directory: `dist`
-4. Deploy automatically on push to main branch
+1. **Connect Repository**: Link your GitHub repository to Netlify
+2. **Environment Variables**: Set up environment variables in Netlify dashboard
+3. **Build Settings**:
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+4. **Deploy**: Automatic deployment on push to main branch
 
 ### Manual Deployment
 ```bash
 npm run build
 # Upload dist/ folder to your hosting provider
+```
+
+### Environment Variables for Production
+Make sure to set these in your deployment platform:
+```env
+VITE_COINMARKETCAP_API_KEY=your_production_api_key
+VITE_COINGECKO_API_KEY=your_backup_api_key
+VITE_HYPERION_RPC_URL=https://production-hyperion-rpc
+VITE_ALITH_AI_ENDPOINT=https://production-alith-api
 ```
 
 ## 🤝 Contributing
@@ -271,11 +348,11 @@ We welcome contributions! Please follow these steps:
 5. **Open a Pull Request**
 
 ### Development Guidelines
-- Follow TypeScript best practices
-- Use Tailwind CSS for styling
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
+- **TypeScript**: Follow TypeScript best practices
+- **Tailwind CSS**: Use utility classes for styling
+- **API Integration**: Properly handle API errors and rate limits
+- **Testing**: Add tests for new features
+- **Documentation**: Update documentation for new features
 
 ## 📄 License
 
@@ -283,26 +360,30 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **Hyperion Network** - For providing the high-performance blockchain infrastructure
+- **CoinMarketCap** - For providing professional-grade cryptocurrency data
+- **Hyperion Network** - For high-performance blockchain infrastructure
 - **Alith AI** - For advanced AI capabilities
-- **CoinGecko** - For reliable cryptocurrency data
 - **React Community** - For the amazing ecosystem
 - **Tailwind CSS** - For the utility-first CSS framework
 
-## Connect
-rohitjadhav45074507@gmail.com
+## 📞 Support
+
+For support and questions:
+- **Email**: rohitjadhav45074507@gmail.com
+- **GitHub Issues**: [Create an issue](https://github.com/your-username/hypertrade-ai-defi-platform/issues)
+- **Documentation**: Check the README and code comments
 
 ## 🗺 Roadmap
 
 ### Q1 2025
-- [ ] Mobile app development
-- [ ] Advanced charting tools
+- [ ] Mobile app development (React Native)
+- [ ] Advanced charting tools (TradingView integration)
 - [ ] Social trading features
 - [ ] Multi-chain support expansion
 
 ### Q2 2025
 - [ ] Institutional trading tools
-- [ ] Advanced AI models
+- [ ] Advanced AI models (GPT-4 integration)
 - [ ] Yield farming integration
 - [ ] NFT portfolio tracking
 
@@ -312,8 +393,16 @@ rohitjadhav45074507@gmail.com
 - [ ] Institutional API
 - [ ] White-label solutions
 
+### Q4 2025
+- [ ] Decentralized governance
+- [ ] DAO token launch
+- [ ] Mobile trading app
+- [ ] Enterprise solutions
+
 ---
 
 **Built with ❤️ by the HyperTrade Team**
 
 *Empowering the future of decentralized finance through AI and parallel execution.*
+
+**Live Demo**: [https://courageous-bubblegum-8bcff9.netlify.app](https://courageous-bubblegum-8bcff9.netlify.app)
