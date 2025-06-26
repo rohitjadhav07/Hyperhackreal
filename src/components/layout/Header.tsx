@@ -3,9 +3,11 @@ import { Search, X } from 'lucide-react';
 import WalletConnect from '../ui/WalletConnect';
 import NotificationCenter from './NotificationCenter';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const { currentTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -55,21 +57,35 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="h-16 bg-gray-900/80 backdrop-blur-md border-b border-gray-800 flex items-center justify-between px-6 sticky top-0 z-10 w-full">
+    <header className={`h-16 backdrop-blur-md border-b flex items-center justify-between px-6 sticky top-0 z-10 w-full transition-colors duration-300 ${
+      currentTheme === 'dark' 
+        ? 'bg-gray-900/80 border-gray-800' 
+        : 'bg-white/80 border-gray-200'
+    }`}>
       <div className="flex items-center w-1/3 relative">
         <div className="relative w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={18} />
+          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
+            currentTheme === 'dark' ? 'text-gray-500' : 'text-gray-400'
+          }`} size={18} />
           <input
             type="text"
             placeholder="Search markets, assets, strategies..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-10 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+            className={`w-full border rounded-lg py-2 pl-10 pr-10 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-300 ${
+              currentTheme === 'dark' 
+                ? 'bg-gray-800 border-gray-700 text-white' 
+                : 'bg-white border-gray-300 text-gray-900'
+            }`}
           />
           {searchQuery && (
             <button
               onClick={clearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-300"
+              className={`absolute right-3 top-1/2 transform -translate-y-1/2 transition-colors duration-300 ${
+                currentTheme === 'dark' 
+                  ? 'text-gray-500 hover:text-gray-300' 
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
             >
               <X size={16} />
             </button>
@@ -78,11 +94,17 @@ const Header: React.FC = () => {
 
         {/* Search Results Dropdown */}
         {(searchResults.length > 0 || isSearching) && (
-          <div className="absolute top-full left-0 w-64 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+          <div className={`absolute top-full left-0 w-64 mt-1 border rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto transition-colors duration-300 ${
+            currentTheme === 'dark' 
+              ? 'bg-gray-800 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}>
             {isSearching ? (
               <div className="p-4 text-center">
                 <div className="animate-spin rounded-full h-6 w-6 border-2 border-indigo-500 border-t-transparent mx-auto"></div>
-                <p className="text-sm text-gray-400 mt-2">Searching...</p>
+                <p className={`text-sm mt-2 ${
+                  currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>Searching...</p>
               </div>
             ) : searchResults.length > 0 ? (
               <div className="py-2">
@@ -90,12 +112,18 @@ const Header: React.FC = () => {
                   <button
                     key={index}
                     onClick={() => handleResultClick(result)}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-700 transition-colors"
+                    className={`w-full px-4 py-2 text-left transition-colors ${
+                      currentTheme === 'dark' 
+                        ? 'hover:bg-gray-700' 
+                        : 'hover:bg-gray-100'
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium">{result.name}</p>
-                        <p className="text-xs text-gray-400 capitalize">{result.type}</p>
+                        <p className={`text-xs capitalize ${
+                          currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                        }`}>{result.type}</p>
                       </div>
                       {result.price && (
                         <span className="text-sm text-green-500">{result.price}</span>
@@ -109,7 +137,9 @@ const Header: React.FC = () => {
               </div>
             ) : (
               <div className="p-4 text-center">
-                <p className="text-sm text-gray-400">No results found</p>
+                <p className={`text-sm ${
+                  currentTheme === 'dark' ? 'text-gray-400' : 'text-gray-600'
+                }`}>No results found</p>
               </div>
             )}
           </div>

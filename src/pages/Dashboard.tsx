@@ -3,6 +3,7 @@ import MarketOverview from '../components/dashboard/MarketOverview';
 import AIInsights from '../components/dashboard/AIInsights';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
 import { LineChart, BarChart3, PieChart, Gauge, BrainCircuit, Send, Zap, Activity, TrendingUp } from 'lucide-react';
+import { coinGeckoService } from '../services/coinGeckoApi';
 
 interface Message {
   id: string;
@@ -15,25 +16,14 @@ const Dashboard: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'Welcome to HyperTrade. How can I assist with your trading today?',
+      content: 'Welcome to HyperTrade! I\'m Alith, your AI trading assistant. I can help you with market analysis, portfolio optimization, and trading strategies. How can I assist you today?',
       isUser: false,
       timestamp: new Date(Date.now() - 300000) // 5 minutes ago
-    },
-    {
-      id: '2',
-      content: "What's the current network status?",
-      isUser: true,
-      timestamp: new Date(Date.now() - 240000) // 4 minutes ago
-    },
-    {
-      id: '3',
-      content: 'Hyperion network is running optimally with 1,240 TPS and 2.1s block time. All systems operational with parallel execution at 94% efficiency.',
-      isUser: false,
-      timestamp: new Date(Date.now() - 180000) // 3 minutes ago
     }
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [marketData, setMarketData] = useState<any[]>([]);
   const [networkMetrics, setNetworkMetrics] = useState({
     tps: 1240,
     blockTime: 2.1,
@@ -42,6 +32,22 @@ const Dashboard: React.FC = () => {
     activeNodes: 847,
     totalTransactions: 2847392
   });
+
+  // Fetch real market data for AI responses
+  useEffect(() => {
+    const fetchMarketData = async () => {
+      try {
+        const coins = await coinGeckoService.getCoinsMarkets(['bitcoin', 'ethereum', 'metis-token']);
+        setMarketData(coins);
+      } catch (error) {
+        console.error('Error fetching market data for AI:', error);
+      }
+    };
+
+    fetchMarketData();
+    const interval = setInterval(fetchMarketData, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, []);
 
   // Simulate real-time network metrics updates
   useEffect(() => {
@@ -59,66 +65,63 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Generate network performance chart data
-  const generateNetworkData = () => {
-    const data = [];
-    const now = Date.now();
-    for (let i = 23; i >= 0; i--) {
-      const timestamp = new Date(now - i * 60 * 60 * 1000);
-      data.push({
-        time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        tps: 1200 + Math.random() * 100,
-        efficiency: 90 + Math.random() * 8,
-        volume: Math.random() * 1000000000
-      });
-    }
-    return data;
-  };
-
-  const networkChartData = generateNetworkData();
-
   const generateAIResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
     
-    // Market-related responses
+    // Get real market data for responses
+    const btc = marketData.find(coin => coin.id === 'bitcoin');
+    const eth = marketData.find(coin => coin.id === 'ethereum');
+    const metis = marketData.find(coin => coin.id === 'metis-token');
+    
+    // Market-related responses with real data
     if (lowerMessage.includes('price') || lowerMessage.includes('market')) {
-      return `Based on current market analysis, BTC is at $64,273 (+2.4%), ETH at $3,124 (+1.7%), and METIS at $45.67 (+8.3%). The overall market sentiment is bullish with increased trading volume across all major pairs.`;
+      if (btc && eth && metis) {
+        return `Based on current live market data: BTC is at $${btc.current_price.toLocaleString()} (${btc.price_change_percentage_24h >= 0 ? '+' : ''}${btc.price_change_percentage_24h.toFixed(2)}%), ETH at $${eth.current_price.toLocaleString()} (${eth.price_change_percentage_24h >= 0 ? '+' : ''}${eth.price_change_percentage_24h.toFixed(2)}%), and METIS at $${metis.current_price.toFixed(2)} (${metis.price_change_percentage_24h >= 0 ? '+' : ''}${metis.price_change_percentage_24h.toFixed(2)}%). Market sentiment appears ${btc.price_change_percentage_24h > 0 ? 'bullish' : 'bearish'} with ${btc.price_change_percentage_24h > 2 ? 'strong' : 'moderate'} momentum.`;
+      }
+      return `I'm currently fetching the latest market data. Please try again in a moment for real-time price analysis.`;
     }
     
     // Portfolio-related responses
     if (lowerMessage.includes('portfolio') || lowerMessage.includes('balance')) {
-      return `Your current portfolio value is $77,583.76 with a 24h gain of +$3,241.52 (+4.3%). Your allocation is well-diversified across BTC (35%), ETH (19%), HYPR (40%), and USDC (6%). Consider rebalancing if HYPR continues its strong performance.`;
+      return `Your current portfolio value is $77,583.76 with a 24h gain of +$3,241.52 (+4.3%). Your allocation shows: BTC (35%), ETH (19%), HYPR (40%), and USDC (6%). Based on current market conditions, I recommend ${btc?.price_change_percentage_24h > 0 ? 'holding your positions as momentum is positive' : 'considering some profit-taking if you\'re overexposed to volatile assets'}.`;
     }
     
-    // Trading strategy responses
+    // Trading strategy responses with real market context
     if (lowerMessage.includes('strategy') || lowerMessage.includes('trade') || lowerMessage.includes('buy') || lowerMessage.includes('sell')) {
-      return `I recommend a momentum-based approach given current market conditions. Your active AI strategies are performing well with a 68% win rate. Consider increasing position sizes on HYPR due to strong fundamentals and network growth.`;
+      const marketTrend = btc?.price_change_percentage_24h > 2 ? 'strong uptrend' : btc?.price_change_percentage_24h < -2 ? 'downtrend' : 'sideways movement';
+      return `Given the current ${marketTrend} in the market, I recommend a ${marketTrend === 'strong uptrend' ? 'momentum-based' : marketTrend === 'downtrend' ? 'defensive' : 'range-trading'} approach. Your active AI strategies are performing well with a 68% win rate. ${btc?.price_change_percentage_24h > 5 ? 'Consider taking some profits at these levels.' : 'This could be a good accumulation opportunity for quality assets.'}`;
     }
     
-    // Network/technical responses
+    // Network/technical responses with real metrics
     if (lowerMessage.includes('network') || lowerMessage.includes('hyperion') || lowerMessage.includes('gas') || lowerMessage.includes('fees')) {
-      return `Hyperion network is operating at peak efficiency: ${networkMetrics.tps} TPS, ${networkMetrics.blockTime.toFixed(1)}s average block time, and minimal gas fees at ${networkMetrics.gasPrice.toFixed(5)} HYPR. Parallel execution is running at ${networkMetrics.efficiency}% capacity, perfect for high-frequency trading strategies.`;
+      return `Hyperion network is operating at peak efficiency: ${networkMetrics.tps} TPS, ${networkMetrics.blockTime.toFixed(1)}s average block time, and minimal gas fees at ${networkMetrics.gasPrice.toFixed(5)} HYPR. Parallel execution is running at ${networkMetrics.efficiency}% capacity with ${networkMetrics.activeNodes} active nodes. Perfect conditions for high-frequency trading strategies.`;
     }
     
     // Risk management responses
     if (lowerMessage.includes('risk') || lowerMessage.includes('loss') || lowerMessage.includes('stop')) {
-      return `Your current risk profile is set to aggressive with a portfolio risk score of Medium. I suggest implementing stop-losses at -2% for volatile positions and taking partial profits on gains exceeding 15%. Diversification across 4 assets provides good risk distribution.`;
+      const volatility = btc ? Math.abs(btc.price_change_percentage_24h) : 3;
+      return `Current market volatility is ${volatility > 5 ? 'high' : volatility > 2 ? 'moderate' : 'low'} at ${volatility.toFixed(1)}%. I suggest ${volatility > 5 ? 'tightening stop-losses to -1.5% and reducing position sizes' : 'maintaining current risk parameters with stop-losses at -2%'}. Your portfolio risk score is Medium. ${volatility > 5 ? 'Consider hedging with stablecoins during high volatility periods.' : 'Good conditions for maintaining current exposure levels.'}`;
     }
     
     // AI/Alith specific responses
     if (lowerMessage.includes('ai') || lowerMessage.includes('alith') || lowerMessage.includes('help')) {
-      return `I'm Alith, your AI trading assistant powered by Hyperion's on-chain intelligence. I can help with market analysis, portfolio optimization, risk management, and strategy development. What specific aspect of your trading would you like to explore?`;
+      return `I'm Alith, your AI trading assistant powered by Hyperion's on-chain intelligence. I analyze real-time market data, network metrics, and your portfolio to provide personalized insights. I can help with market analysis, risk assessment, strategy optimization, and trade execution. What specific aspect of your trading would you like me to analyze?`;
+    }
+
+    // Greeting responses
+    if (lowerMessage.includes('hello') || lowerMessage.includes('hi') || lowerMessage.includes('hey')) {
+      return `Hello! I'm here to help you navigate the crypto markets with AI-powered insights. I can analyze current market conditions, review your portfolio performance, suggest trading strategies, or answer questions about the Hyperion network. What would you like to explore?`;
     }
     
-    // Default responses for general queries
-    const defaultResponses = [
-      `I'm analyzing current market conditions and on-chain data to provide you with the most accurate insights. What specific information would you like me to focus on?`,
-      `Based on Hyperion's parallel execution capabilities, I can process multiple data streams simultaneously. How can I assist with your trading decisions today?`,
-      `I'm continuously monitoring market sentiment, price movements, and network activity. Is there a particular asset or strategy you'd like me to analyze?`,
-      `Using advanced AI algorithms, I can help optimize your trading performance. What would you like to know about your current positions or market opportunities?`
+    // Default responses with market context
+    const responses = [
+      `I'm analyzing current market conditions using live data from CoinGecko and Hyperion network metrics. ${btc ? `BTC is currently ${btc.price_change_percentage_24h >= 0 ? 'up' : 'down'} ${Math.abs(btc.price_change_percentage_24h).toFixed(1)}% today.` : ''} What specific information would you like me to focus on?`,
+      `Based on Hyperion's parallel execution capabilities and current network efficiency of ${networkMetrics.efficiency}%, I can process multiple data streams simultaneously. How can I assist with your trading decisions today?`,
+      `I'm continuously monitoring market sentiment, price movements, and network activity. ${marketData.length > 0 ? 'Current market data shows mixed signals across major assets.' : 'Fetching latest market data...'} Is there a particular asset or strategy you'd like me to analyze?`,
+      `Using advanced AI algorithms and real-time data, I can help optimize your trading performance. The network is currently processing ${networkMetrics.tps} transactions per second. What would you like to know about your current positions or market opportunities?`
     ];
     
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+    return responses[Math.floor(Math.random() * responses.length)];
   };
 
   const handleSendMessage = async () => {
@@ -154,6 +157,10 @@ const Dashboard: React.FC = () => {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setInputMessage(suggestion);
   };
 
   return (
@@ -334,10 +341,10 @@ const Dashboard: React.FC = () => {
             </div>
             
             <div className="mt-2 flex flex-wrap gap-1">
-              {['Market analysis', 'Portfolio review', 'Risk assessment', 'Strategy suggestions'].map((suggestion) => (
+              {['Market analysis', 'Portfolio review', 'Risk assessment', 'Network status'].map((suggestion) => (
                 <button
                   key={suggestion}
-                  onClick={() => setInputMessage(suggestion)}
+                  onClick={() => handleSuggestionClick(suggestion)}
                   className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 rounded text-gray-300 transition-colors"
                   disabled={isTyping}
                 >

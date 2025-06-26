@@ -1,8 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
+:root {
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+}
+
 body {
   font-family: 'Inter', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark {
   @apply bg-gray-900 text-gray-100;
+}
+
+body.light {
+  @apply bg-gray-50 text-gray-900;
 }
 
 .gradient-text {
@@ -10,11 +25,27 @@ body {
 }
 
 .card {
-  @apply bg-gray-800 border border-gray-700 rounded-xl shadow-lg transition-all duration-300;
+  transition: all 0.3s ease;
+}
+
+body.dark .card {
+  @apply bg-gray-800 border border-gray-700 rounded-xl shadow-lg;
+}
+
+body.light .card {
+  @apply bg-white border border-gray-200 rounded-xl shadow-lg;
 }
 
 .card:hover {
-  @apply shadow-xl border-gray-600;
+  @apply shadow-xl;
+}
+
+body.dark .card:hover {
+  @apply border-gray-600;
+}
+
+body.light .card:hover {
+  @apply border-gray-300;
 }
 
 .stat-card {
@@ -26,7 +57,15 @@ body {
 }
 
 .stat-label {
-  @apply text-sm text-gray-400;
+  @apply text-sm;
+}
+
+body.dark .stat-label {
+  @apply text-gray-400;
+}
+
+body.light .stat-label {
+  @apply text-gray-600;
 }
 
 .animate-pulse-slow {
@@ -55,15 +94,27 @@ body {
   height: 6px;
 }
 
-::-webkit-scrollbar-track {
+body.dark ::-webkit-scrollbar-track {
   @apply bg-gray-800;
 }
 
-::-webkit-scrollbar-thumb {
+body.light ::-webkit-scrollbar-track {
+  @apply bg-gray-200;
+}
+
+body.dark ::-webkit-scrollbar-thumb {
   @apply bg-gray-600 rounded-full;
 }
 
-::-webkit-scrollbar-thumb:hover {
+body.light ::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 rounded-full;
+}
+
+body.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+body.light ::-webkit-scrollbar-thumb:hover {
   @apply bg-gray-500;
 }
 
@@ -76,7 +127,15 @@ body {
 }
 
 .btn-secondary {
+  transition: all 0.2s ease;
+}
+
+body.dark .btn-secondary {
   @apply bg-gray-700 hover:bg-gray-600 text-white;
+}
+
+body.light .btn-secondary {
+  @apply bg-gray-200 hover:bg-gray-300 text-gray-900;
 }
 
 .btn-success {
@@ -88,5 +147,56 @@ body {
 }
 
 .btn-ghost {
+  transition: all 0.2s ease;
+}
+
+body.dark .btn-ghost {
   @apply bg-transparent hover:bg-gray-800 text-gray-300;
+}
+
+body.light .btn-ghost {
+  @apply bg-transparent hover:bg-gray-100 text-gray-700;
+}
+
+/* Theme-specific input styles */
+body.dark input,
+body.dark textarea,
+body.dark select {
+  @apply bg-gray-800 border-gray-700 text-white;
+}
+
+body.light input,
+body.light textarea,
+body.light select {
+  @apply bg-white border-gray-300 text-gray-900;
+}
+
+body.dark input:focus,
+body.dark textarea:focus,
+body.dark select:focus {
+  @apply ring-indigo-500 border-indigo-500;
+}
+
+body.light input:focus,
+body.light textarea:focus,
+body.light select:focus {
+  @apply ring-indigo-500 border-indigo-500;
+}
+
+/* Sidebar theme styles */
+body.dark aside {
+  @apply bg-gray-900 border-gray-800;
+}
+
+body.light aside {
+  @apply bg-white border-gray-200;
+}
+
+/* Header theme styles */
+body.dark header {
+  @apply bg-gray-900/80 border-gray-800;
+}
+
+body.light header {
+  @apply bg-white/80 border-gray-200;
 }

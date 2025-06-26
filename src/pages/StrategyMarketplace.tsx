@@ -1,11 +1,152 @@
 import React, { useState } from 'react';
-import { TrendingUp, Users, Award, Bookmark, Star, ChevronDown, Download, Eye, Upload, Check } from 'lucide-react';
+import { TrendingUp, Users, Award, Bookmark, Star, ChevronDown, Download, Eye, Upload, Check, X, Filter } from 'lucide-react';
 import { useStrategyStore } from '../store/strategyStore';
+
+interface StrategyPreviewModalProps {
+  strategy: any;
+  isOpen: boolean;
+  onClose: () => void;
+  onPurchase: () => void;
+}
+
+const StrategyPreviewModal: React.FC<StrategyPreviewModalProps> = ({ strategy, isOpen, onClose, onPurchase }) => {
+  if (!isOpen || !strategy) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-xl w-full max-w-4xl p-6 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold">{strategy.name} - Preview</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-lg">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-medium mb-2">Strategy Description</h4>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-gray-300">{strategy.description}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">Performance Chart</h4>
+                <div className="bg-gray-800 p-4 rounded-lg h-64 flex items-center justify-center">
+                  <div className="text-center">
+                    <TrendingUp size={48} className="mx-auto mb-2 text-green-400 opacity-70" />
+                    <p className="text-gray-400">Strategy performance over time</p>
+                    <p className="text-xs text-gray-500">+{strategy.stats.profit} total return</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">Strategy Tags</h4>
+                <div className="flex flex-wrap gap-2">
+                  {strategy.tags.map((tag: string, index: number) => (
+                    <span key={index} className="text-xs bg-indigo-600/20 text-indigo-300 px-3 py-1 rounded-full">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">Risk Analysis</h4>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-400">Max Drawdown</p>
+                      <p className="text-lg font-medium text-rose-500">-3.2%</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Sharpe Ratio</p>
+                      <p className="text-lg font-medium">1.45</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Win Rate</p>
+                      <p className="text-lg font-medium text-green-500">{strategy.stats.rating}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Volatility</p>
+                      <p className="text-lg font-medium">8.7%</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <div className="space-y-6">
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-medium mb-3">Strategy Details</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Author</span>
+                    <span>{strategy.author}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Users</span>
+                    <span>{strategy.stats.users}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Rating</span>
+                    <div className="flex items-center">
+                      <Star size={14} className="text-amber-400 mr-1" fill="currentColor" />
+                      <span>{strategy.stats.rating}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Price</span>
+                    <span className={strategy.price === 'Free' ? 'text-green-500' : 'text-white'}>
+                      {strategy.price}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 p-4 rounded-lg">
+                <h4 className="font-medium mb-3">Performance Metrics</h4>
+                <div className="space-y-3">
+                  <div className="text-center p-3 bg-gray-700 rounded-lg">
+                    <p className="text-xs text-gray-400">Total Profit</p>
+                    <p className="text-lg font-bold text-green-500">{strategy.stats.profit}</p>
+                  </div>
+                  <div className="text-center p-3 bg-gray-700 rounded-lg">
+                    <p className="text-xs text-gray-400">Active Users</p>
+                    <p className="text-lg font-bold">{strategy.stats.users}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <button 
+                onClick={onPurchase}
+                className="w-full btn btn-primary"
+              >
+                <Download size={16} className="mr-2" />
+                {strategy.price === 'Free' ? 'Download Strategy' : `Purchase for ${strategy.price}`}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const StrategyMarketplace: React.FC = () => {
   const { strategies, publishedStrategies, publishStrategy } = useStrategyStore();
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [selectedStrategy, setSelectedStrategy] = useState<string>('');
+  const [selectedPreviewStrategy, setSelectedPreviewStrategy] = useState<any>(null);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('All Categories');
+  const [priceFilter, setPriceFilter] = useState('All Prices');
+  const [sortBy, setSortBy] = useState('Top Performing');
   const [publishForm, setPublishForm] = useState({
     price: 'Free',
     tags: '',
@@ -24,7 +165,8 @@ const StrategyMarketplace: React.FC = () => {
         rating: '4.8'
       },
       tags: ['Momentum', 'Low Risk', 'HYPR Token'],
-      price: 'Free'
+      price: 'Free',
+      category: 'Momentum'
     },
     {
       id: 'mp2',
@@ -37,7 +179,8 @@ const StrategyMarketplace: React.FC = () => {
         rating: '4.6'
       },
       tags: ['Volatility', 'Medium Risk', 'Multi-Chain'],
-      price: '50 HYPR'
+      price: '50 HYPR',
+      category: 'Volatility'
     },
     {
       id: 'mp3',
@@ -50,7 +193,8 @@ const StrategyMarketplace: React.FC = () => {
         rating: '4.9'
       },
       tags: ['Sentiment', 'Low Risk', 'AI-Powered'],
-      price: '25 HYPR'
+      price: '25 HYPR',
+      category: 'AI-Powered'
     },
     ...publishedStrategies.map(strategy => ({
       id: strategy.id,
@@ -59,9 +203,31 @@ const StrategyMarketplace: React.FC = () => {
       description: strategy.description,
       stats: strategy.stats,
       tags: [strategy.riskLevel + ' Risk', strategy.tradingPair],
-      price: 'Free'
+      price: 'Free',
+      category: 'AI-Powered'
     }))
   ];
+
+  const filteredStrategies = marketplaceStrategies.filter(strategy => {
+    const categoryMatch = categoryFilter === 'All Categories' || strategy.category === categoryFilter;
+    const priceMatch = priceFilter === 'All Prices' || 
+      (priceFilter === 'Free' && strategy.price === 'Free') ||
+      (priceFilter === 'Paid' && strategy.price !== 'Free');
+    return categoryMatch && priceMatch;
+  });
+
+  const sortedStrategies = [...filteredStrategies].sort((a, b) => {
+    switch (sortBy) {
+      case 'Top Performing':
+        return parseFloat(b.stats.profit.replace(/[+%]/g, '')) - parseFloat(a.stats.profit.replace(/[+%]/g, ''));
+      case 'Most Popular':
+        return parseInt(b.stats.users.replace(/,/g, '')) - parseInt(a.stats.users.replace(/,/g, ''));
+      case 'Featured':
+        return parseFloat(b.stats.rating) - parseFloat(a.stats.rating);
+      default:
+        return 0;
+    }
+  });
 
   const handlePublishStrategy = () => {
     if (selectedStrategy) {
@@ -69,6 +235,23 @@ const StrategyMarketplace: React.FC = () => {
       setShowPublishModal(false);
       setSelectedStrategy('');
       setPublishForm({ price: 'Free', tags: '', description: '' });
+      alert('Strategy published successfully!');
+    }
+  };
+
+  const handlePreviewStrategy = (strategy: any) => {
+    setSelectedPreviewStrategy(strategy);
+    setShowPreviewModal(true);
+  };
+
+  const handlePurchaseStrategy = () => {
+    if (selectedPreviewStrategy) {
+      if (selectedPreviewStrategy.price === 'Free') {
+        alert(`Successfully downloaded "${selectedPreviewStrategy.name}" strategy!`);
+      } else {
+        alert(`Purchase initiated for "${selectedPreviewStrategy.name}" at ${selectedPreviewStrategy.price}. This would integrate with real payment systems.`);
+      }
+      setShowPreviewModal(false);
     }
   };
 
@@ -83,15 +266,24 @@ const StrategyMarketplace: React.FC = () => {
       
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex flex-wrap gap-2">
-          <button className="btn btn-secondary text-sm">
+          <button 
+            onClick={() => setSortBy('Top Performing')}
+            className={`btn text-sm ${sortBy === 'Top Performing' ? 'btn-primary' : 'btn-secondary'}`}
+          >
             <TrendingUp size={16} className="mr-1.5" />
             <span>Top Performing</span>
           </button>
-          <button className="btn btn-secondary text-sm">
+          <button 
+            onClick={() => setSortBy('Most Popular')}
+            className={`btn text-sm ${sortBy === 'Most Popular' ? 'btn-primary' : 'btn-secondary'}`}
+          >
             <Users size={16} className="mr-1.5" />
             <span>Most Popular</span>
           </button>
-          <button className="btn btn-secondary text-sm">
+          <button 
+            onClick={() => setSortBy('Featured')}
+            className={`btn text-sm ${sortBy === 'Featured' ? 'btn-primary' : 'btn-secondary'}`}
+          >
             <Award size={16} className="mr-1.5" />
             <span>Featured</span>
           </button>
@@ -99,21 +291,29 @@ const StrategyMarketplace: React.FC = () => {
         
         <div className="flex flex-wrap gap-2">
           <div className="relative">
-            <select className="bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none">
-              <option>All Categories</option>
-              <option>Momentum</option>
-              <option>Volatility</option>
-              <option>Sentiment</option>
-              <option>AI-Powered</option>
+            <select 
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+            >
+              <option value="All Categories">All Categories</option>
+              <option value="Momentum">Momentum</option>
+              <option value="Volatility">Volatility</option>
+              <option value="Sentiment">Sentiment</option>
+              <option value="AI-Powered">AI-Powered</option>
             </select>
             <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
           </div>
           
           <div className="relative">
-            <select className="bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none">
-              <option>All Prices</option>
-              <option>Free</option>
-              <option>Paid</option>
+            <select 
+              value={priceFilter}
+              onChange={(e) => setPriceFilter(e.target.value)}
+              className="bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+            >
+              <option value="All Prices">All Prices</option>
+              <option value="Free">Free</option>
+              <option value="Paid">Paid</option>
             </select>
             <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
           </div>
@@ -121,7 +321,7 @@ const StrategyMarketplace: React.FC = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {marketplaceStrategies.map((strategy) => (
+        {sortedStrategies.map((strategy) => (
           <div key={strategy.id} className="card hover:border-indigo-500/50 transition-all duration-300">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
@@ -177,11 +377,17 @@ const StrategyMarketplace: React.FC = () => {
             </div>
             
             <div className="border-t border-gray-700 p-4 flex justify-between">
-              <button className="text-xs flex items-center text-gray-400 hover:text-gray-300">
+              <button 
+                onClick={() => handlePreviewStrategy(strategy)}
+                className="text-xs flex items-center text-gray-400 hover:text-gray-300"
+              >
                 <Eye size={14} className="mr-1" />
                 <span>Preview</span>
               </button>
-              <button className="btn btn-primary text-xs py-1.5 px-3">
+              <button 
+                onClick={() => handlePreviewStrategy(strategy)}
+                className="btn btn-primary text-xs py-1.5 px-3"
+              >
                 <Download size={14} className="mr-1" />
                 <span>{strategy.price === 'Free' ? 'Download' : 'Purchase'}</span>
               </button>
@@ -299,6 +505,14 @@ const StrategyMarketplace: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Strategy Preview Modal */}
+      <StrategyPreviewModal
+        strategy={selectedPreviewStrategy}
+        isOpen={showPreviewModal}
+        onClose={() => setShowPreviewModal(false)}
+        onPurchase={handlePurchaseStrategy}
+      />
 
       {/* Publish Strategy Modal */}
       {showPublishModal && (

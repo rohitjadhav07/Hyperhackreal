@@ -40,7 +40,7 @@ interface SettingsStore {
 
 const defaultSettings: UserSettings = {
   displayName: 'CryptoTrader',
-  email: 'trader@example.com',
+  email: 'trader@hypertrade.ai',
   language: 'English',
   theme: 'dark',
   twoFactorEnabled: false,
@@ -62,13 +62,18 @@ const defaultSettings: UserSettings = {
 
 export const useSettingsStore = create<SettingsStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       settings: defaultSettings,
       
       updateSettings: (updates) => {
         set((state) => ({
           settings: { ...state.settings, ...updates }
         }));
+        
+        // Apply language changes immediately
+        if (updates.language) {
+          document.documentElement.lang = updates.language.toLowerCase();
+        }
       },
       
       resetSettings: () => {
@@ -77,6 +82,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'settings-storage',
+      version: 1,
     }
   )
 );
