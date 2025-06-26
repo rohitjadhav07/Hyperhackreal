@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Shield, Wallet, Bell, BrainCircuit, Moon, Sun, ArrowRightLeft, Users, ChevronDown, Save, Key, Smartphone, Mail, Globe, CreditCard, Zap } from 'lucide-react';
 import { useSettingsStore } from '../store/settingsStore';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Settings: React.FC = () => {
   const { settings, updateSettings } = useSettingsStore();
+  const { theme, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('account');
   const [hasChanges, setHasChanges] = useState(false);
+  const [connectedWallet, setConnectedWallet] = useState<string | null>(null);
   
   const tabs = [
     { id: 'account', label: 'Account', icon: <Users size={18} /> },
@@ -15,14 +18,39 @@ const Settings: React.FC = () => {
     { id: 'ai', label: 'AI Preferences', icon: <BrainCircuit size={18} /> },
   ];
 
+  // Check for connected wallet on component mount
+  useEffect(() => {
+    const checkWalletConnection = async () => {
+      try {
+        const { ethereum } = window as any;
+        if (ethereum) {
+          const accounts = await ethereum.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            setConnectedWallet(accounts[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking wallet connection:', error);
+      }
+    };
+
+    checkWalletConnection();
+  }, []);
+
   const handleSettingChange = (key: string, value: any) => {
     updateSettings({ [key]: value });
     setHasChanges(true);
   };
 
+  const handleThemeChange = (newTheme: 'dark' | 'light' | 'system') => {
+    toggleTheme(newTheme);
+    handleSettingChange('theme', newTheme);
+  };
+
   const saveSettings = () => {
     setHasChanges(false);
     // Settings are automatically saved via Zustand persist
+    alert('Settings saved successfully!');
   };
 
   return (
@@ -78,7 +106,7 @@ const Settings: React.FC = () => {
               </div>
               
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Appearance</label>
+                <label className="block text-sm text-gray-400 mb-3">Appearance</label>
                 <div className="flex space-x-4">
                   <div className="flex items-center">
                     <input
@@ -86,10 +114,10 @@ const Settings: React.FC = () => {
                       id="dark"
                       name="theme"
                       checked={settings.theme === 'dark'}
-                      onChange={() => handleSettingChange('theme', 'dark')}
+                      onChange={() => handleThemeChange('dark')}
                       className="mr-2"
                     />
-                    <label htmlFor="dark" className="flex items-center">
+                    <label htmlFor="dark" className="flex items-center cursor-pointer">
                       <Moon size={16} className="mr-1.5" />
                       <span>Dark</span>
                     </label>
@@ -101,10 +129,10 @@ const Settings: React.FC = () => {
                       id="light"
                       name="theme"
                       checked={settings.theme === 'light'}
-                      onChange={() => handleSettingChange('theme', 'light')}
+                      onChange={() => handleThemeChange('light')}
                       className="mr-2"
                     />
-                    <label htmlFor="light" className="flex items-center">
+                    <label htmlFor="light" className="flex items-center cursor-pointer">
                       <Sun size={16} className="mr-1.5" />
                       <span>Light</span>
                     </label>
@@ -116,15 +144,18 @@ const Settings: React.FC = () => {
                       id="system"
                       name="theme"
                       checked={settings.theme === 'system'}
-                      onChange={() => handleSettingChange('theme', 'system')}
+                      onChange={() => handleThemeChange('system')}
                       className="mr-2"
                     />
-                    <label htmlFor="system" className="flex items-center">
+                    <label htmlFor="system" className="flex items-center cursor-pointer">
                       <ArrowRightLeft size={16} className="mr-1.5" />
                       <span>System</span>
                     </label>
                   </div>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Current theme: {theme} {theme === 'system' && '(follows system preference)'}
+                </p>
               </div>
               
               <div>
@@ -135,14 +166,17 @@ const Settings: React.FC = () => {
                     onChange={(e) => handleSettingChange('language', e.target.value)}
                     className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
                   >
-                    <option>English</option>
-                    <option>Spanish</option>
-                    <option>Chinese</option>
-                    <option>Japanese</option>
-                    <option>Korean</option>
+                    <option value="English">English</option>
+                    <option value="Spanish">Spanish</option>
+                    <option value="Chinese">Chinese</option>
+                    <option value="Japanese">Japanese</option>
+                    <option value="Korean">Korean</option>
                   </select>
                   <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Selected language: {settings.language}
+                </p>
               </div>
             </div>
           </div>
@@ -267,21 +301,35 @@ const Settings: React.FC = () => {
               <div className="bg-gray-800 rounded-lg p-4">
                 <h3 className="font-medium mb-3">Connected Wallets</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
-                        <CreditCard size={16} className="text-white" />
+                  {connectedWallet ? (
+                    <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 rounded-full bg-orange-500 flex items-center justify-center">
+                          <CreditCard size={16} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="font-medium">MetaMask</p>
+                          <p className="text-sm text-gray-400">
+                            {connectedWallet.slice(0, 6)}...{connectedWallet.slice(-4)}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">MetaMask</p>
-                        <p className="text-sm text-gray-400">0x1234...5678</p>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">Connected</span>
+                        <button 
+                          onClick={() => setConnectedWallet(null)}
+                          className="text-xs text-rose-400 hover:text-rose-300"
+                        >
+                          Disconnect
+                        </button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">Connected</span>
-                      <button className="text-xs text-rose-400 hover:text-rose-300">Disconnect</button>
+                  ) : (
+                    <div className="p-3 bg-gray-700 rounded-lg text-center">
+                      <p className="text-sm text-gray-400 mb-2">No wallet connected</p>
+                      <p className="text-xs text-gray-500">Connect a wallet to see it here</p>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <button className="mt-3 btn btn-secondary text-sm">
                   <Wallet size={16} className="mr-1.5" />

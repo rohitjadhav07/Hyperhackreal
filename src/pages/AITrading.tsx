@@ -1,11 +1,169 @@
 import React, { useState } from 'react';
-import { BrainCircuit, ArrowUpCircle, ArrowDownCircle, ChevronDown, Clock, BarChart2, GitBranch, Play, Pause, Copy, Trash2, Edit } from 'lucide-react';
+import { BrainCircuit, ArrowUpCircle, ArrowDownCircle, ChevronDown, Clock, BarChart2, GitBranch, Play, Pause, Copy, Trash2, Edit, Eye, X } from 'lucide-react';
 import { useStrategyStore } from '../store/strategyStore';
+
+const StrategyDetailsModal: React.FC<{ strategy: any; isOpen: boolean; onClose: () => void }> = ({ strategy, isOpen, onClose }) => {
+  if (!isOpen || !strategy) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-xl w-full max-w-4xl p-6 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold">{strategy.name} - Strategy Details</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-lg">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-medium mb-2">Strategy Overview</h4>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-gray-300">{strategy.description}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">Natural Language Strategy</h4>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-gray-300">{strategy.naturalLanguageStrategy}</p>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">Performance Chart</h4>
+                <div className="bg-gray-800 p-4 rounded-lg h-64 flex items-center justify-center">
+                  <div className="text-center">
+                    <BarChart2 size={48} className="mx-auto mb-2 text-indigo-400 opacity-70" />
+                    <p className="text-gray-400">Strategy performance visualization</p>
+                    <p className="text-xs text-gray-500">Historical profit/loss over time</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">Recent Trades</h4>
+                <div className="bg-gray-800 rounded-lg">
+                  <div className="divide-y divide-gray-700">
+                    {[
+                      { type: 'buy', asset: 'BTC', amount: '+0.024', value: '$1,542.36', time: '2 min ago', profit: '+$241.23' },
+                      { type: 'sell', asset: 'ETH', amount: '-0.5', value: '$1,561.89', time: '15 min ago', profit: '+$58.76' },
+                      { type: 'buy', asset: 'HYPR', amount: '+50', value: '$628.00', time: '28 min ago', profit: '+$42.12' },
+                    ].map((trade, index) => (
+                      <div key={index} className="p-3 flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            trade.type === 'buy' ? 'bg-green-500/20' : 'bg-rose-500/20'
+                          }`}>
+                            {trade.type === 'buy' ? 
+                              <ArrowUpCircle size={16} className="text-green-500" /> : 
+                              <ArrowDownCircle size={16} className="text-rose-500" />
+                            }
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{trade.type.toUpperCase()} {trade.asset}</p>
+                            <p className="text-xs text-gray-400">{trade.time}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium">{trade.amount}</p>
+                          <p className="text-xs text-green-500">{trade.profit}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <div className="space-y-6">
+              <div>
+                <h4 className="font-medium mb-2">Strategy Info</h4>
+                <div className="bg-gray-800 p-4 rounded-lg space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Trading Pair</span>
+                    <span>{strategy.tradingPair}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Risk Level</span>
+                    <span className={`${
+                      strategy.riskLevel === 'Low' ? 'text-green-500' : 
+                      strategy.riskLevel === 'Medium' ? 'text-amber-500' : 'text-rose-500'
+                    }`}>{strategy.riskLevel}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Status</span>
+                    <span className={`${
+                      strategy.status === 'Active' ? 'text-green-500' : 
+                      strategy.status === 'Paused' ? 'text-gray-400' : 'text-amber-500'
+                    }`}>{strategy.status}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Created</span>
+                    <span>{new Date(strategy.createdAt).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">Performance Metrics</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-gray-800 p-3 rounded-lg text-center">
+                    <p className="text-xs text-gray-400">Total Profit</p>
+                    <p className="text-lg font-bold text-green-500">{strategy.stats.profit}</p>
+                  </div>
+                  <div className="bg-gray-800 p-3 rounded-lg text-center">
+                    <p className="text-xs text-gray-400">Win Rate</p>
+                    <p className="text-lg font-bold">{strategy.stats.winRate}</p>
+                  </div>
+                  <div className="bg-gray-800 p-3 rounded-lg text-center">
+                    <p className="text-xs text-gray-400">Total Trades</p>
+                    <p className="text-lg font-bold">{strategy.stats.trades}</p>
+                  </div>
+                  <div className="bg-gray-800 p-3 rounded-lg text-center">
+                    <p className="text-xs text-gray-400">Runtime</p>
+                    <p className="text-lg font-bold">{strategy.stats.timeframe}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-medium mb-2">Risk Analysis</h4>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Max Drawdown</span>
+                      <span className="text-rose-500">-5.2%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Sharpe Ratio</span>
+                      <span>1.34</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Volatility</span>
+                      <span>12.8%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AITrading: React.FC = () => {
   const { strategies, addStrategy, toggleStrategyStatus, cloneStrategy, deleteStrategy } = useStrategyStore();
   const [isRunning, setIsRunning] = useState(false);
   const [showStrategyForm, setShowStrategyForm] = useState(false);
+  const [selectedStrategy, setSelectedStrategy] = useState<any>(null);
+  const [showStrategyDetails, setShowStrategyDetails] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -26,6 +184,11 @@ const AITrading: React.FC = () => {
       });
       setShowStrategyForm(false);
     }
+  };
+
+  const handleViewDetails = (strategy: any) => {
+    setSelectedStrategy(strategy);
+    setShowStrategyDetails(true);
   };
 
   const activeStrategies = strategies.filter(s => s.status === 'Active').length;
@@ -305,6 +468,13 @@ const AITrading: React.FC = () => {
                 
                 <div className="flex space-x-2">
                   <button 
+                    onClick={() => handleViewDetails(strategy)}
+                    className="btn btn-ghost text-xs"
+                  >
+                    <Eye size={14} className="mr-1" />
+                    <span>Details</span>
+                  </button>
+                  <button 
                     onClick={() => cloneStrategy(strategy.id)}
                     className="btn btn-ghost text-xs"
                   >
@@ -365,7 +535,10 @@ const AITrading: React.FC = () => {
                   <Clock size={14} className="mr-1" />
                   <span>Running for {strategy.stats.timeframe}</span>
                 </div>
-                <button className="text-xs text-indigo-400 hover:text-indigo-300">
+                <button 
+                  onClick={() => handleViewDetails(strategy)}
+                  className="text-xs text-indigo-400 hover:text-indigo-300"
+                >
                   View Details
                 </button>
               </div>
@@ -386,6 +559,12 @@ const AITrading: React.FC = () => {
           )}
         </div>
       </div>
+
+      <StrategyDetailsModal
+        strategy={selectedStrategy}
+        isOpen={showStrategyDetails}
+        onClose={() => setShowStrategyDetails(false)}
+      />
     </div>
   );
 };

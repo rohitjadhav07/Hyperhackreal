@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MarketOverview from '../components/dashboard/MarketOverview';
 import AIInsights from '../components/dashboard/AIInsights';
 import ActivityFeed from '../components/dashboard/ActivityFeed';
-import { LineChart, BarChart3, PieChart, Gauge, BrainCircuit, Send } from 'lucide-react';
+import { LineChart, BarChart3, PieChart, Gauge, BrainCircuit, Send, Zap, Activity, TrendingUp } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -34,6 +34,48 @@ const Dashboard: React.FC = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [networkMetrics, setNetworkMetrics] = useState({
+    tps: 1240,
+    blockTime: 2.1,
+    gasPrice: 0.00012,
+    efficiency: 94,
+    activeNodes: 847,
+    totalTransactions: 2847392
+  });
+
+  // Simulate real-time network metrics updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNetworkMetrics(prev => ({
+        tps: prev.tps + Math.floor(Math.random() * 20) - 10,
+        blockTime: Math.max(1.8, Math.min(2.5, prev.blockTime + (Math.random() - 0.5) * 0.2)),
+        gasPrice: Math.max(0.00008, Math.min(0.00020, prev.gasPrice + (Math.random() - 0.5) * 0.00002)),
+        efficiency: Math.max(85, Math.min(98, prev.efficiency + (Math.random() - 0.5) * 2)),
+        activeNodes: prev.activeNodes + Math.floor(Math.random() * 10) - 5,
+        totalTransactions: prev.totalTransactions + Math.floor(Math.random() * 50) + 10
+      }));
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Generate network performance chart data
+  const generateNetworkData = () => {
+    const data = [];
+    const now = Date.now();
+    for (let i = 23; i >= 0; i--) {
+      const timestamp = new Date(now - i * 60 * 60 * 1000);
+      data.push({
+        time: timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        tps: 1200 + Math.random() * 100,
+        efficiency: 90 + Math.random() * 8,
+        volume: Math.random() * 1000000000
+      });
+    }
+    return data;
+  };
+
+  const networkChartData = generateNetworkData();
 
   const generateAIResponse = (userMessage: string): string => {
     const lowerMessage = userMessage.toLowerCase();
@@ -55,7 +97,7 @@ const Dashboard: React.FC = () => {
     
     // Network/technical responses
     if (lowerMessage.includes('network') || lowerMessage.includes('hyperion') || lowerMessage.includes('gas') || lowerMessage.includes('fees')) {
-      return `Hyperion network is operating at peak efficiency: 1,240 TPS, 2.1s average block time, and minimal gas fees at 0.00012 HYPR. Parallel execution is running at 94% capacity, perfect for high-frequency trading strategies.`;
+      return `Hyperion network is operating at peak efficiency: ${networkMetrics.tps} TPS, ${networkMetrics.blockTime.toFixed(1)}s average block time, and minimal gas fees at ${networkMetrics.gasPrice.toFixed(5)} HYPR. Parallel execution is running at ${networkMetrics.efficiency}% capacity, perfect for high-frequency trading strategies.`;
     }
     
     // Risk management responses
@@ -129,38 +171,77 @@ const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-medium">Hyperion Network Performance</h3>
               <div className="flex space-x-1">
-                <button className="p-1.5 bg-gray-700 rounded hover:bg-gray-600">
+                <button className="p-1.5 bg-indigo-600 rounded hover:bg-indigo-700 transition-colors">
                   <LineChart size={16} />
                 </button>
-                <button className="p-1.5 bg-gray-800 rounded hover:bg-gray-700">
+                <button className="p-1.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors">
                   <BarChart3 size={16} />
                 </button>
-                <button className="p-1.5 bg-gray-800 rounded hover:bg-gray-700">
+                <button className="p-1.5 bg-gray-700 rounded hover:bg-gray-600 transition-colors">
                   <PieChart size={16} />
                 </button>
               </div>
             </div>
             
-            <div className="h-64 w-full rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center">
-              <div className="text-center">
-                <LineChart size={48} className="mx-auto mb-2 text-indigo-400 opacity-70" />
-                <p className="text-gray-400">Network activity visualization</p>
-                <p className="text-xs text-gray-500">Real-time parallel execution metrics</p>
+            <div className="h-64 w-full rounded-lg overflow-hidden bg-gray-800 mb-4">
+              <div className="p-4 h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Zap size={20} className="text-yellow-400" />
+                    <span className="text-sm font-medium">Real-time Network Activity</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span className="text-xs text-green-500">Live</span>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-gray-700 p-3 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">Current TPS</span>
+                      <TrendingUp size={14} className="text-green-500" />
+                    </div>
+                    <p className="text-lg font-bold text-green-500">{networkMetrics.tps.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-gray-700 p-3 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">Efficiency</span>
+                      <Activity size={14} className="text-blue-500" />
+                    </div>
+                    <p className="text-lg font-bold text-blue-500">{networkMetrics.efficiency.toFixed(1)}%</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400">Active Nodes</p>
+                    <p className="text-sm font-medium">{networkMetrics.activeNodes.toLocaleString()}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400">Total Tx</p>
+                    <p className="text-sm font-medium">{(networkMetrics.totalTransactions / 1e6).toFixed(1)}M</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400">Avg Block</p>
+                    <p className="text-sm font-medium">{networkMetrics.blockTime.toFixed(1)}s</p>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="grid grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="stat-card bg-gray-800">
                 <span className="stat-label">TPS</span>
-                <span className="stat-value">1,240</span>
+                <span className="stat-value text-green-500">{networkMetrics.tps.toLocaleString()}</span>
               </div>
               <div className="stat-card bg-gray-800">
                 <span className="stat-label">Block Time</span>
-                <span className="stat-value">2.1s</span>
+                <span className="stat-value text-blue-500">{networkMetrics.blockTime.toFixed(1)}s</span>
               </div>
               <div className="stat-card bg-gray-800">
                 <span className="stat-label">Gas (HYPR)</span>
-                <span className="stat-value">0.00012</span>
+                <span className="stat-value text-purple-500">{networkMetrics.gasPrice.toFixed(5)}</span>
               </div>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, ArrowRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, ArrowRight, ExternalLink, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { coinGeckoService, CoinGeckoPrice } from '../../services/coinGeckoApi';
 import EnhancedChart from '../charts/EnhancedChart';
@@ -41,12 +41,76 @@ const MarketCard: React.FC<MarketCardProps> = ({ title, value, change, isPositiv
   );
 };
 
+const AllMarketsModal: React.FC<{ isOpen: boolean; onClose: () => void; marketData: CoinGeckoPrice[] }> = ({ isOpen, onClose, marketData }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-xl w-full max-w-4xl p-6 max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold">All Markets</h3>
+          <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-lg">
+            ✕
+          </button>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-700">
+            <thead className="bg-gray-800">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Asset</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">24h Change</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Market Cap</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Volume</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-700">
+              {marketData.map((coin) => (
+                <tr key={coin.id} className="hover:bg-gray-800/50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-sm mr-3">
+                        {coin.symbol.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium">{coin.name}</div>
+                        <div className="text-sm text-gray-400">{coin.symbol.toUpperCase()}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium">${coin.current_price.toLocaleString()}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className={`flex items-center ${coin.price_change_percentage_24h >= 0 ? 'text-green-500' : 'text-rose-500'}`}>
+                      {coin.price_change_percentage_24h >= 0 ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                      <span className="ml-1">{coin.price_change_percentage_24h.toFixed(2)}%</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium">${(coin.market_cap / 1e9).toFixed(2)}B</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium">${(coin.total_volume / 1e9).toFixed(2)}B</div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const MarketOverview: React.FC = () => {
   const [marketData, setMarketData] = useState<CoinGeckoPrice[]>([]);
   const [selectedCoin, setSelectedCoin] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
+  const [showAllMarkets, setShowAllMarkets] = useState(false);
 
   useEffect(() => {
     const fetchMarketData = async () => {
@@ -124,6 +188,10 @@ const MarketOverview: React.FC = () => {
       timestamp: index,
       value: price
     }));
+  };
+
+  const handleViewAll = () => {
+    setShowAllMarkets(true);
   };
 
   const markets = marketData.length > 0 ? [
@@ -210,9 +278,12 @@ const MarketOverview: React.FC = () => {
             </div>
           </div>
         </div>
-        <button className="btn btn-ghost text-sm">
-          <span>View All</span>
-          <ArrowRight size={16} className="ml-1" />
+        <button 
+          onClick={handleViewAll}
+          className="btn btn-ghost text-sm hover:bg-gray-800 transition-colors"
+        >
+          <span>View All Markets</span>
+          <BarChart3 size={16} className="ml-1" />
         </button>
       </div>
       
@@ -232,7 +303,11 @@ const MarketOverview: React.FC = () => {
         {markets.map((market) => (
           <MarketCard
             key={market.id}
-            {...market}
+            title={market.title}
+            value={market.value}
+            change={market.change}
+            isPositive={market.isPositive}
+            data={market.chartData}
             onClick={() => market.id !== 'tvl' && setSelectedCoin(market.symbol)}
           />
         ))}
@@ -246,6 +321,12 @@ const MarketOverview: React.FC = () => {
           priceChange={markets.find(m => m.symbol === selectedCoin)?.priceChange || 0}
         />
       )}
+
+      <AllMarketsModal
+        isOpen={showAllMarkets}
+        onClose={() => setShowAllMarkets(false)}
+        marketData={marketData}
+      />
     </div>
   );
 };

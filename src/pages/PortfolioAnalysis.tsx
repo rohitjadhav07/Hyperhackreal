@@ -1,14 +1,27 @@
-import React from 'react';
-import { ArrowUpRight, ArrowDownRight, Info, DollarSign, TrendingUp, BarChart3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowUpRight, ArrowDownRight, Info, DollarSign, TrendingUp, BarChart3, CreditCard, Wallet, Plus } from 'lucide-react';
 import PortfolioChart from '../components/charts/PortfolioChart';
 
 const PortfolioAnalysis: React.FC = () => {
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositMethod, setDepositMethod] = useState('crypto');
+
   const assets = [
     { name: 'Bitcoin', symbol: 'BTC', amount: '0.42', value: '$26,973.85', change: '+2.4%', isPositive: true },
     { name: 'Ethereum', symbol: 'ETH', amount: '4.75', value: '$14,837.91', change: '+1.7%', isPositive: true },
     { name: 'Hyperion', symbol: 'HYPR', amount: '2,450', value: '$30,772.00', change: '+8.3%', isPositive: true },
     { name: 'USD Coin', symbol: 'USDC', amount: '5,000', value: '$5,000.00', change: '0.0%', isPositive: true },
   ];
+
+  const handleDeposit = () => {
+    if (depositAmount && parseFloat(depositAmount) > 0) {
+      // In a real app, this would integrate with payment processors or wallet connections
+      alert(`Deposit of $${depositAmount} initiated via ${depositMethod}. This would integrate with real payment systems.`);
+      setShowDepositModal(false);
+      setDepositAmount('');
+    }
+  };
 
   return (
     <div>
@@ -32,8 +45,11 @@ const PortfolioAnalysis: React.FC = () => {
             </div>
             
             <div className="flex space-x-2">
-              <button className="btn btn-secondary">
-                <DollarSign size={16} className="mr-1" />
+              <button 
+                onClick={() => setShowDepositModal(true)}
+                className="btn btn-secondary"
+              >
+                <Plus size={16} className="mr-1" />
                 <span>Deposit</span>
               </button>
               <button className="btn btn-primary">
@@ -209,6 +225,103 @@ const PortfolioAnalysis: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Deposit Modal */}
+      {showDepositModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-xl w-full max-w-md p-6">
+            <h3 className="text-xl font-bold mb-4">Deposit Funds</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Deposit Method</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setDepositMethod('crypto')}
+                    className={`p-3 rounded-lg border transition-colors ${
+                      depositMethod === 'crypto'
+                        ? 'border-indigo-500 bg-indigo-500/10'
+                        : 'border-gray-700 bg-gray-800'
+                    }`}
+                  >
+                    <Wallet size={20} className="mx-auto mb-1" />
+                    <p className="text-sm">Crypto</p>
+                  </button>
+                  <button
+                    onClick={() => setDepositMethod('card')}
+                    className={`p-3 rounded-lg border transition-colors ${
+                      depositMethod === 'card'
+                        ? 'border-indigo-500 bg-indigo-500/10'
+                        : 'border-gray-700 bg-gray-800'
+                    }`}
+                  >
+                    <CreditCard size={20} className="mx-auto mb-1" />
+                    <p className="text-sm">Card</p>
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Amount (USD)</label>
+                <input
+                  type="number"
+                  placeholder="0.00"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              
+              <div className="flex space-x-2">
+                {['100', '500', '1000', '5000'].map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => setDepositAmount(amount)}
+                    className="flex-1 py-2 px-3 bg-gray-700 hover:bg-gray-600 rounded text-sm transition-colors"
+                  >
+                    ${amount}
+                  </button>
+                ))}
+              </div>
+              
+              {depositMethod === 'crypto' && (
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                  <p className="text-sm text-blue-400 mb-1">Crypto Deposit</p>
+                  <p className="text-xs text-gray-300">
+                    Connect your wallet to deposit crypto directly into your portfolio
+                  </p>
+                </div>
+              )}
+              
+              {depositMethod === 'card' && (
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <p className="text-sm text-green-400 mb-1">Card Payment</p>
+                  <p className="text-xs text-gray-300">
+                    Secure card payments processed via Stripe (3% fee applies)
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <div className="flex space-x-3 mt-6">
+              <button 
+                onClick={handleDeposit}
+                disabled={!depositAmount || parseFloat(depositAmount) <= 0}
+                className="flex-1 btn btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <DollarSign size={16} className="mr-1.5" />
+                <span>Deposit ${depositAmount || '0'}</span>
+              </button>
+              <button 
+                onClick={() => setShowDepositModal(false)}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
