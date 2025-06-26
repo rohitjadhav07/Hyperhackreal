@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, ArrowRight, X } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import { coinMarketCapService, CoinData } from '../../services/coinMarketCapApi';
-import AdvancedChart from '../charts/AdvancedChart';
+import { TrendingUp, TrendingDown, DollarSign, ArrowRight } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { coinGeckoService, CoinGeckoPrice } from '../../services/coinGeckoApi';
+import EnhancedChart from '../charts/EnhancedChart';
 
 interface MarketCardProps {
   title: string;
@@ -42,9 +42,8 @@ const MarketCard: React.FC<MarketCardProps> = ({ title, value, change, isPositiv
 };
 
 const MarketOverview: React.FC = () => {
-  const [marketData, setMarketData] = useState<any[]>([]);
+  const [marketData, setMarketData] = useState<CoinGeckoPrice[]>([]);
   const [selectedCoin, setSelectedCoin] = useState<string | null>(null);
-  const [coinData, setCoinData] = useState<{ [key: string]: CoinData }>({});
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState(true);
@@ -55,33 +54,24 @@ const MarketOverview: React.FC = () => {
         setError(null);
         setIsLoading(true);
 
-        // Fetch latest quotes from CoinMarketCap
-        const quotes = await coinMarketCapService.getLatestQuotes(['BTC', 'ETH', 'METIS']);
-        
-        const coinDataMap: { [key: string]: CoinData } = {};
-        quotes.forEach((coin, index) => {
-          const symbols = ['BTC', 'ETH', 'METIS'];
-          if (coin) {
-            coinDataMap[symbols[index]] = coin;
+        // Fetch market data from CoinGecko
+        const coins = await coinGeckoService.getCoinsMarkets(
+          ['bitcoin', 'ethereum', 'metis-token'],
+          {
+            vs_currency: 'usd',
+            order: 'market_cap_desc',
+            per_page: 3,
+            page: 1,
+            sparkline: true,
+            price_change_percentage: '1h,24h,7d,30d'
           }
-        });
+        );
 
-        setCoinData(coinDataMap);
-
-        // Generate sparkline data for visualization
-        const sparklineData = generateSparklineData();
-        setMarketData(sparklineData);
+        setMarketData(coins);
         setLastUpdate(new Date());
       } catch (error) {
         console.error('Error fetching market data:', error);
-        setError('Using demo data - CoinMarketCap API integration ready for production');
-        
-        // Fallback to demo data
-        const demoData = generateDemoData();
-        setCoinData(demoData);
-        const sparklineData = generateSparklineData();
-        setMarketData(sparklineData);
-        setLastUpdate(new Date());
+        setError('Failed to fetch live market data. Please check your internet connection.');
       } finally {
         setIsLoading(false);
       }
@@ -96,89 +86,13 @@ const MarketOverview: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const generateDemoData = (): { [key: string]: CoinData } => {
-    return {
-      BTC: {
-        id: 1,
-        name: 'Bitcoin',
-        symbol: 'BTC',
-        slug: 'bitcoin',
-        quote: {
-          USD: {
-            price: 64273.85,
-            volume_24h: 28500000000,
-            volume_change_24h: 12.5,
-            percent_change_1h: 0.8,
-            percent_change_24h: 2.4,
-            percent_change_7d: 5.2,
-            percent_change_30d: 15.7,
-            market_cap: 1250000000000,
-            market_cap_dominance: 45.2,
-            fully_diluted_market_cap: 1350000000000,
-            last_updated: new Date().toISOString(),
-          },
-        },
-      },
-      ETH: {
-        id: 1027,
-        name: 'Ethereum',
-        symbol: 'ETH',
-        slug: 'ethereum',
-        quote: {
-          USD: {
-            price: 3124.67,
-            volume_24h: 15200000000,
-            volume_change_24h: 8.3,
-            percent_change_1h: 0.3,
-            percent_change_24h: 1.7,
-            percent_change_7d: 3.8,
-            percent_change_30d: 12.4,
-            market_cap: 375000000000,
-            market_cap_dominance: 18.5,
-            fully_diluted_market_cap: 375000000000,
-            last_updated: new Date().toISOString(),
-          },
-        },
-      },
-      METIS: {
-        id: 9640,
-        name: 'Metis Token',
-        symbol: 'METIS',
-        slug: 'metis-token',
-        quote: {
-          USD: {
-            price: 45.67,
-            volume_24h: 125000000,
-            volume_change_24h: 15.2,
-            percent_change_1h: 2.1,
-            percent_change_24h: 8.3,
-            percent_change_7d: 18.9,
-            percent_change_30d: 35.6,
-            market_cap: 456700000,
-            market_cap_dominance: 0.02,
-            fully_diluted_market_cap: 456700000,
-            last_updated: new Date().toISOString(),
-          },
-        },
-      },
-    };
-  };
-
-  const generateSparklineData = () => {
-    const data = [];
-    for (let i = 0; i < 168; i++) { // 7 days of hourly data
-      data.push({
-        timestamp: new Date(Date.now() - (168 - i) * 3600000).toISOString(),
-        value: Math.random() * 100 + 50,
-      });
-    }
-    return data;
-  };
-
   const calculateTVL = () => {
-    const btcTVL = (coinData.BTC?.quote.USD.market_cap || 1250000000000) * 0.4;
-    const ethTVL = (coinData.ETH?.quote.USD.market_cap || 375000000000) * 0.35;
-    const metisTVL = (coinData.METIS?.quote.USD.market_cap || 456700000) * 0.25;
+    if (marketData.length === 0) return 0;
+    
+    const btcTVL = (marketData.find(coin => coin.id === 'bitcoin')?.market_cap || 0) * 0.4;
+    const ethTVL = (marketData.find(coin => coin.id === 'ethereum')?.market_cap || 0) * 0.35;
+    const metisTVL = (marketData.find(coin => coin.id === 'metis-token')?.market_cap || 0) * 0.25;
+    
     return btcTVL + ethTVL + metisTVL;
   };
 
@@ -203,48 +117,61 @@ const MarketOverview: React.FC = () => {
     return `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
   };
 
-  const markets = [
+  const getSparklineData = (sparkline?: { price: number[] }) => {
+    if (!sparkline || !sparkline.price) return [];
+    
+    return sparkline.price.map((price, index) => ({
+      timestamp: index,
+      value: price
+    }));
+  };
+
+  const markets = marketData.length > 0 ? [
     {
-      id: 'BTC',
+      id: 'bitcoin',
+      symbol: 'BTC',
       title: 'BTC/USD',
-      value: formatValue(coinData.BTC?.quote.USD.price || 64273.85),
-      change: formatChange(coinData.BTC?.quote.USD.percent_change_24h || 2.4),
-      isPositive: (coinData.BTC?.quote.USD.percent_change_24h || 2.4) >= 0,
-      chartData: marketData.slice(0, 24),
-      currentPrice: coinData.BTC?.quote.USD.price || 64273.85,
-      priceChange: coinData.BTC?.quote.USD.percent_change_24h || 2.4
+      value: formatValue(marketData.find(coin => coin.id === 'bitcoin')?.current_price || 0),
+      change: formatChange(marketData.find(coin => coin.id === 'bitcoin')?.price_change_percentage_24h || 0),
+      isPositive: (marketData.find(coin => coin.id === 'bitcoin')?.price_change_percentage_24h || 0) >= 0,
+      chartData: getSparklineData(marketData.find(coin => coin.id === 'bitcoin')?.sparkline_in_7d),
+      currentPrice: marketData.find(coin => coin.id === 'bitcoin')?.current_price || 0,
+      priceChange: marketData.find(coin => coin.id === 'bitcoin')?.price_change_percentage_24h || 0
     },
     {
-      id: 'ETH',
+      id: 'ethereum',
+      symbol: 'ETH',
       title: 'ETH/USD',
-      value: formatValue(coinData.ETH?.quote.USD.price || 3124.67),
-      change: formatChange(coinData.ETH?.quote.USD.percent_change_24h || 1.7),
-      isPositive: (coinData.ETH?.quote.USD.percent_change_24h || 1.7) >= 0,
-      chartData: marketData.slice(24, 48),
-      currentPrice: coinData.ETH?.quote.USD.price || 3124.67,
-      priceChange: coinData.ETH?.quote.USD.percent_change_24h || 1.7
+      value: formatValue(marketData.find(coin => coin.id === 'ethereum')?.current_price || 0),
+      change: formatChange(marketData.find(coin => coin.id === 'ethereum')?.price_change_percentage_24h || 0),
+      isPositive: (marketData.find(coin => coin.id === 'ethereum')?.price_change_percentage_24h || 0) >= 0,
+      chartData: getSparklineData(marketData.find(coin => coin.id === 'ethereum')?.sparkline_in_7d),
+      currentPrice: marketData.find(coin => coin.id === 'ethereum')?.current_price || 0,
+      priceChange: marketData.find(coin => coin.id === 'ethereum')?.price_change_percentage_24h || 0
     },
     {
-      id: 'METIS',
+      id: 'metis-token',
+      symbol: 'METIS',
       title: 'METIS/USD',
-      value: formatValue(coinData.METIS?.quote.USD.price || 45.67),
-      change: formatChange(coinData.METIS?.quote.USD.percent_change_24h || 8.3),
-      isPositive: (coinData.METIS?.quote.USD.percent_change_24h || 8.3) >= 0,
-      chartData: marketData.slice(48, 72),
-      currentPrice: coinData.METIS?.quote.USD.price || 45.67,
-      priceChange: coinData.METIS?.quote.USD.percent_change_24h || 8.3
+      value: formatValue(marketData.find(coin => coin.id === 'metis-token')?.current_price || 0),
+      change: formatChange(marketData.find(coin => coin.id === 'metis-token')?.price_change_percentage_24h || 0),
+      isPositive: (marketData.find(coin => coin.id === 'metis-token')?.price_change_percentage_24h || 0) >= 0,
+      chartData: getSparklineData(marketData.find(coin => coin.id === 'metis-token')?.sparkline_in_7d),
+      currentPrice: marketData.find(coin => coin.id === 'metis-token')?.current_price || 0,
+      priceChange: marketData.find(coin => coin.id === 'metis-token')?.price_change_percentage_24h || 0
     },
     {
       id: 'tvl',
+      symbol: 'TVL',
       title: 'Total TVL',
       value: formatValue(calculateTVL()),
       change: formatChange(2.5),
       isPositive: true,
-      chartData: marketData.slice(0, 24),
+      chartData: getSparklineData(marketData.find(coin => coin.id === 'bitcoin')?.sparkline_in_7d),
       currentPrice: calculateTVL(),
       priceChange: 2.5
     }
-  ];
+  ] : [];
 
   if (isLoading) {
     return (
@@ -252,7 +179,7 @@ const MarketOverview: React.FC = () => {
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-xl font-bold">Market Overview</h2>
-            <p className="text-sm text-gray-400">Loading market data...</p>
+            <p className="text-sm text-gray-400">Loading live market data...</p>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -277,11 +204,10 @@ const MarketOverview: React.FC = () => {
             <p className="text-sm text-gray-400">
               Last updated: {lastUpdate.toLocaleTimeString()}
             </p>
-            {error && (
-              <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded">
-                Demo Mode
-              </span>
-            )}
+            <div className="flex items-center space-x-1">
+              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-xs text-green-500">Live Data</span>
+            </div>
           </div>
         </div>
         <button className="btn btn-ghost text-sm">
@@ -291,13 +217,13 @@ const MarketOverview: React.FC = () => {
       </div>
       
       {error && (
-        <div className="bg-amber-500/10 border border-amber-500/20 text-amber-500 p-4 rounded-lg mb-4">
+        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 p-4 rounded-lg mb-4">
           <div className="flex items-center space-x-2">
-            <span className="font-medium">Demo Mode:</span>
+            <span className="font-medium">Connection Error:</span>
             <span>{error}</span>
           </div>
           <p className="text-sm mt-1 opacity-80">
-            Add your CoinMarketCap API key to .env file for live data
+            Retrying automatically every 30 seconds...
           </p>
         </div>
       )}
@@ -307,17 +233,17 @@ const MarketOverview: React.FC = () => {
           <MarketCard
             key={market.id}
             {...market}
-            onClick={() => market.id !== 'tvl' && setSelectedCoin(market.id)}
+            onClick={() => market.id !== 'tvl' && setSelectedCoin(market.symbol)}
           />
         ))}
       </div>
 
       {selectedCoin && (
-        <AdvancedChart
+        <EnhancedChart
           symbol={selectedCoin}
           onClose={() => setSelectedCoin(null)}
-          currentPrice={markets.find(m => m.id === selectedCoin)?.currentPrice || 0}
-          priceChange={markets.find(m => m.id === selectedCoin)?.priceChange || 0}
+          currentPrice={markets.find(m => m.symbol === selectedCoin)?.currentPrice || 0}
+          priceChange={markets.find(m => m.symbol === selectedCoin)?.priceChange || 0}
         />
       )}
     </div>

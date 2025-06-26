@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
-import { coinMarketCapService } from '../../services/coinMarketCapApi';
+import { coinGeckoService, CoinGeckoPrice } from '../../services/coinGeckoApi';
 
 interface InsightProps {
   type: 'positive' | 'negative' | 'neutral' | 'warning';
@@ -42,118 +42,128 @@ const AIInsights: React.FC = () => {
   const [insights, setInsights] = useState<InsightProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const generateInsights = (data: any) => {
+  const generateInsights = (coins: CoinGeckoPrice[]) => {
     const newInsights: InsightProps[] = [];
     
-    if (!data.BTC || !data.ETH || !data.METIS) {
-      // Demo insights when API data is not available
+    if (coins.length === 0) {
+      // Default insights when no data is available
       return [
         {
-          type: 'positive' as const,
-          content: 'Bitcoin showing strong momentum with institutional adoption increasing. Consider accumulating on dips below $62,000.',
-          source: 'Technical Analysis',
-          time: 'Just now'
-        },
-        {
-          type: 'warning' as const,
-          content: 'High correlation between BTC and ETH detected. Diversification into METIS or other Layer 2 tokens recommended.',
-          source: 'Correlation Analysis',
-          time: '3m ago'
-        },
-        {
-          type: 'positive' as const,
-          content: 'METIS network activity surging with 40% increase in daily transactions. Strong fundamentals support current price levels.',
-          source: 'On-chain Analysis',
-          time: '7m ago'
-        },
-        {
           type: 'neutral' as const,
-          content: 'Market volatility within normal ranges. Current conditions favor momentum-based strategies over mean reversion.',
-          source: 'Market Structure',
-          time: '12m ago'
+          content: 'Market data is currently being fetched. AI analysis will be available shortly.',
+          source: 'System Status',
+          time: 'Just now'
         }
       ];
     }
 
+    const btc = coins.find(coin => coin.id === 'bitcoin');
+    const eth = coins.find(coin => coin.id === 'ethereum');
+    const metis = coins.find(coin => coin.id === 'metis-token');
+
     // Analyze BTC trends
-    const btcChange = data.BTC.quote.USD.percent_change_24h;
-    if (Math.abs(btcChange) > 5) {
-      newInsights.push({
-        type: btcChange > 0 ? 'positive' : 'negative',
-        content: `Bitcoin showing ${btcChange > 0 ? 'strong upward' : 'significant downward'} momentum with ${Math.abs(btcChange).toFixed(1)}% movement in 24h. Market cap dominance at ${data.BTC.quote.USD.market_cap_dominance?.toFixed(1) || '45.2'}%. ${btcChange > 0 ? 'Consider taking profits above $65,000' : 'Watch for support at $60,000'}.`,
-        source: 'CoinMarketCap Analysis',
-        time: 'Just now'
-      });
+    if (btc) {
+      const btcChange = btc.price_change_percentage_24h;
+      if (Math.abs(btcChange) > 3) {
+        newInsights.push({
+          type: btcChange > 0 ? 'positive' : 'negative',
+          content: `Bitcoin showing ${btcChange > 0 ? 'strong upward' : 'significant downward'} momentum with ${Math.abs(btcChange).toFixed(1)}% movement in 24h. Market cap: $${(btc.market_cap / 1e12).toFixed(2)}T. ${btcChange > 0 ? 'Consider taking profits above $70,000' : 'Watch for support at $60,000'}.`,
+          source: 'CoinGecko Analysis',
+          time: 'Just now'
+        });
+      }
+
+      // Volume analysis
+      if (btc.total_volume > btc.market_cap * 0.05) {
+        newInsights.push({
+          type: 'positive',
+          content: `High Bitcoin trading volume detected: $${(btc.total_volume / 1e9).toFixed(1)}B (${((btc.total_volume / btc.market_cap) * 100).toFixed(1)}% of market cap). Increased institutional activity suggests strong market participation.`,
+          source: 'Volume Analysis',
+          time: '2m ago'
+        });
+      }
     }
 
     // Analyze ETH performance
-    const ethChange = data.ETH.quote.USD.percent_change_24h;
-    if (Math.abs(ethChange - btcChange) > 3) {
-      newInsights.push({
-        type: 'warning',
-        content: `Unusual ETH-BTC divergence detected: ETH ${ethChange > btcChange ? 'outperforming' : 'underperforming'} BTC by ${Math.abs(ethChange - btcChange).toFixed(1)}%. Volume change: ${data.ETH.quote.USD.volume_change_24h?.toFixed(1) || '8.3'}%. This indicates ${ethChange > btcChange ? 'strong ETH fundamentals or upcoming network upgrades' : 'potential ETH weakness or profit-taking'}.`,
-        source: 'Comparative Analysis',
-        time: '2m ago'
-      });
+    if (eth && btc) {
+      const ethChange = eth.price_change_percentage_24h;
+      const btcChange = btc.price_change_percentage_24h;
+      
+      if (Math.abs(ethChange - btcChange) > 2) {
+        newInsights.push({
+          type: 'warning',
+          content: `ETH-BTC divergence detected: ETH ${ethChange > btcChange ? 'outperforming' : 'underperforming'} BTC by ${Math.abs(ethChange - btcChange).toFixed(1)}%. ETH 7d change: ${eth.price_change_percentage_7d_in_currency?.toFixed(1) || 'N/A'}%. This indicates ${ethChange > btcChange ? 'strong ETH fundamentals or upcoming network activity' : 'potential ETH weakness or profit-taking'}.`,
+          source: 'Comparative Analysis',
+          time: '5m ago'
+        });
+      }
     }
 
     // Analyze METIS performance
-    const metisChange = data.METIS.quote.USD.percent_change_24h;
-    if (Math.abs(metisChange) > 8) {
+    if (metis) {
+      const metisChange = metis.price_change_percentage_24h;
+      if (Math.abs(metisChange) > 5) {
+        newInsights.push({
+          type: metisChange > 0 ? 'positive' : 'negative',
+          content: `METIS showing ${metisChange > 0 ? 'exceptional' : 'concerning'} ${Math.abs(metisChange).toFixed(1)}% ${metisChange > 0 ? 'gains' : 'losses'}. 7-day performance: ${metis.price_change_percentage_7d_in_currency?.toFixed(1) || 'N/A'}%. Market cap rank: #${metis.market_cap_rank}. ${metisChange > 0 ? 'Layer 2 adoption accelerating with network upgrades.' : 'Monitor for potential support levels.'}.`,
+          source: 'Layer 2 Analysis',
+          time: '8m ago'
+        });
+      }
+    }
+
+    // Market sentiment analysis
+    if (btc && eth && metis) {
+      const averageChange = (btc.price_change_percentage_24h + eth.price_change_percentage_24h + metis.price_change_percentage_24h) / 3;
+      const totalMarketCap = btc.market_cap + eth.market_cap + metis.market_cap;
+      
       newInsights.push({
-        type: metisChange > 0 ? 'positive' : 'negative',
-        content: `METIS showing ${metisChange > 0 ? 'exceptional' : 'concerning'} ${Math.abs(metisChange).toFixed(1)}% ${metisChange > 0 ? 'gains' : 'losses'}. 7-day performance: ${data.METIS.quote.USD.percent_change_7d?.toFixed(1) || '18.9'}%. ${metisChange > 0 ? 'Layer 2 adoption accelerating with Hyperion network upgrades.' : 'Monitor for potential support at previous resistance levels.'}.`,
-        source: 'Layer 2 Analysis',
-        time: '5m ago'
+        type: averageChange > 0 ? 'positive' : 'negative',
+        content: `Overall market sentiment: ${averageChange > 3 ? 'Strongly Bullish' : averageChange > 0 ? 'Mildly Bullish' : averageChange > -3 ? 'Mildly Bearish' : 'Strongly Bearish'}. Combined market cap: $${(totalMarketCap / 1e12).toFixed(2)}T. ${
+          averageChange > 0 
+            ? 'Consider increasing positions in outperforming assets. DCA strategies recommended.' 
+            : 'Watch for oversold conditions. Accumulation opportunities may emerge at key support levels.'
+        }`,
+        source: 'Market Sentiment',
+        time: '12m ago'
       });
     }
 
-    // Volume analysis
-    const totalVolume = (data.BTC.quote.USD.volume_24h || 0) + (data.ETH.quote.USD.volume_24h || 0) + (data.METIS.quote.USD.volume_24h || 0);
-    if (totalVolume > 50000000000) { // $50B threshold
+    // Risk assessment
+    if (coins.length > 0) {
+      const volatilityScore = coins.reduce((acc, coin) => acc + Math.abs(coin.price_change_percentage_24h), 0) / coins.length;
       newInsights.push({
-        type: 'positive',
-        content: `High trading volume detected: $${(totalVolume / 1e9).toFixed(1)}B across major assets. Increased institutional activity suggests strong market participation. Optimal conditions for algorithmic trading strategies.`,
-        source: 'Volume Analysis',
-        time: '8m ago'
+        type: volatilityScore > 5 ? 'warning' : 'neutral',
+        content: `Market volatility index: ${volatilityScore.toFixed(1)}% (${volatilityScore > 5 ? 'High' : volatilityScore > 2 ? 'Medium' : 'Low'}). ${volatilityScore > 5 ? 'Consider adjusting stop losses and position sizes.' : 'Stable conditions favor momentum strategies.'}`,
+        source: 'Risk Assessment',
+        time: '15m ago'
       });
     }
 
-    // Market sentiment based on overall performance
-    const averageChange = (btcChange + ethChange + metisChange) / 3;
-    newInsights.push({
-      type: averageChange > 0 ? 'positive' : 'negative',
-      content: `Overall market sentiment: ${averageChange > 5 ? 'Strongly Bullish' : averageChange > 0 ? 'Mildly Bullish' : averageChange > -5 ? 'Mildly Bearish' : 'Strongly Bearish'}. Average 24h change: ${averageChange.toFixed(1)}%. ${
-        averageChange > 0 
-          ? 'Consider increasing positions in outperforming assets. DCA strategies recommended.' 
-          : 'Watch for oversold conditions. Accumulation opportunities may emerge at key support levels.'
-      }`,
-      source: 'Sentiment Analysis',
-      time: '12m ago'
-    });
-
-    return newInsights;
+    return newInsights.slice(0, 4); // Limit to 4 insights
   };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const quotes = await coinMarketCapService.getLatestQuotes(['BTC', 'ETH', 'METIS']);
-        
-        const coinData: any = {};
-        quotes.forEach((coin, index) => {
-          const symbols = ['BTC', 'ETH', 'METIS'];
-          if (coin) {
-            coinData[symbols[index]] = coin;
+        const coins = await coinGeckoService.getCoinsMarkets(
+          ['bitcoin', 'ethereum', 'metis-token'],
+          {
+            vs_currency: 'usd',
+            order: 'market_cap_desc',
+            per_page: 3,
+            page: 1,
+            sparkline: false,
+            price_change_percentage: '1h,24h,7d,30d'
           }
-        });
+        );
         
-        setInsights(generateInsights(coinData));
+        setInsights(generateInsights(coins));
       } catch (error) {
         console.error('Error fetching market data for insights:', error);
-        // Use demo insights
-        setInsights(generateInsights({}));
+        // Use default insights
+        setInsights(generateInsights([]));
       } finally {
         setIsLoading(false);
       }
@@ -162,8 +172,8 @@ const AIInsights: React.FC = () => {
     // Initial fetch
     fetchData();
 
-    // Update every 3 minutes
-    const interval = setInterval(fetchData, 180000);
+    // Update every 2 minutes
+    const interval = setInterval(fetchData, 120000);
 
     return () => clearInterval(interval);
   }, []);
