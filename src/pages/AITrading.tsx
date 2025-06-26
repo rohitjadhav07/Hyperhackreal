@@ -1,37 +1,38 @@
 import React, { useState } from 'react';
-import { BrainCircuit, ArrowUpCircle, ArrowDownCircle, ChevronDown, Clock, BarChart2, GitBranch, Play, Pause, Copy } from 'lucide-react';
+import { BrainCircuit, ArrowUpCircle, ArrowDownCircle, ChevronDown, Clock, BarChart2, GitBranch, Play, Pause, Copy, Trash2, Edit } from 'lucide-react';
+import { useStrategyStore } from '../store/strategyStore';
 
 const AITrading: React.FC = () => {
+  const { strategies, addStrategy, toggleStrategyStatus, cloneStrategy, deleteStrategy } = useStrategyStore();
   const [isRunning, setIsRunning] = useState(false);
-  
-  const strategies = [
-    {
-      id: 1,
-      name: 'Momentum Trader',
-      description: 'Leverages parallel execution to identify and execute on short-term price trends',
-      stats: {
-        profit: '+18.4%',
-        trades: '342',
-        winRate: '68%',
-        timeframe: '2 weeks'
-      },
-      risk: 'Medium',
-      status: 'Active'
-    },
-    {
-      id: 2,
-      name: 'AI Volatility Arbitrage',
-      description: 'Uses on-chain AI to identify price discrepancies across DEXs',
-      stats: {
-        profit: '+9.7%',
-        trades: '1,245',
-        winRate: '54%',
-        timeframe: '2 weeks'
-      },
-      risk: 'High',
-      status: 'Paused'
-    },
-  ];
+  const [showStrategyForm, setShowStrategyForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    tradingPair: 'BTC/USDC',
+    riskLevel: 'Medium' as 'Low' | 'Medium' | 'High',
+    naturalLanguageStrategy: ''
+  });
+
+  const handleCreateStrategy = () => {
+    if (formData.name && formData.description && formData.naturalLanguageStrategy) {
+      addStrategy(formData);
+      setFormData({
+        name: '',
+        description: '',
+        tradingPair: 'BTC/USDC',
+        riskLevel: 'Medium',
+        naturalLanguageStrategy: ''
+      });
+      setShowStrategyForm(false);
+    }
+  };
+
+  const activeStrategies = strategies.filter(s => s.status === 'Active').length;
+  const totalProfit = strategies.reduce((acc, strategy) => {
+    const profit = parseFloat(strategy.stats.profit.replace(/[+%]/g, ''));
+    return acc + (profit * 100); // Assuming $100 base per strategy
+  }, 0);
 
   return (
     <div>
@@ -65,7 +66,10 @@ const AITrading: React.FC = () => {
                   </>
                 )}
               </button>
-              <button className="btn btn-secondary">
+              <button 
+                onClick={() => setShowStrategyForm(true)}
+                className="btn btn-secondary"
+              >
                 <GitBranch size={16} className="mr-1.5" />
                 <span>New Strategy</span>
               </button>
@@ -75,11 +79,11 @@ const AITrading: React.FC = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div className="stat-card bg-gray-800">
               <span className="stat-label">Active Strategies</span>
-              <span className="stat-value">2</span>
+              <span className="stat-value">{activeStrategies}</span>
             </div>
             <div className="stat-card bg-gray-800">
               <span className="stat-label">Total Profit</span>
-              <span className="stat-value text-green-500">+$4,823</span>
+              <span className="stat-value text-green-500">+${totalProfit.toFixed(0)}</span>
             </div>
             <div className="stat-card bg-gray-800">
               <span className="stat-label">Win Rate</span>
@@ -165,68 +169,107 @@ const AITrading: React.FC = () => {
             </span>
           </div>
           
-          <div className="space-y-4 mb-4">
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Strategy Name</label>
-              <input
-                type="text"
-                placeholder="My AI Strategy"
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              />
+          {!showStrategyForm ? (
+            <div className="text-center py-8">
+              <BrainCircuit size={48} className="mx-auto mb-4 text-indigo-400 opacity-70" />
+              <p className="text-gray-400 mb-4">Create your first AI trading strategy</p>
+              <button 
+                onClick={() => setShowStrategyForm(true)}
+                className="btn btn-primary"
+              >
+                <GitBranch size={16} className="mr-1.5" />
+                <span>Create Strategy</span>
+              </button>
             </div>
-            
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Strategy Description</label>
-              <textarea
-                placeholder="Describe your trading strategy..."
-                rows={3}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              ></textarea>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+          ) : (
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Trading Pair</label>
-                <div className="relative">
-                  <select className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none">
-                    <option>BTC/USDC</option>
-                    <option>ETH/USDC</option>
-                    <option>HYPR/USDC</option>
-                  </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+                <label className="block text-sm text-gray-400 mb-1">Strategy Name</label>
+                <input
+                  type="text"
+                  placeholder="My AI Strategy"
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Strategy Description</label>
+                <textarea
+                  placeholder="Describe your trading strategy..."
+                  rows={3}
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                ></textarea>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Trading Pair</label>
+                  <div className="relative">
+                    <select 
+                      value={formData.tradingPair}
+                      onChange={(e) => setFormData({...formData, tradingPair: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+                    >
+                      <option>BTC/USDC</option>
+                      <option>ETH/USDC</option>
+                      <option>HYPR/USDC</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm text-gray-400 mb-1">Risk Level</label>
+                  <div className="relative">
+                    <select 
+                      value={formData.riskLevel}
+                      onChange={(e) => setFormData({...formData, riskLevel: e.target.value as 'Low' | 'Medium' | 'High'})}
+                      className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none"
+                    >
+                      <option>Low</option>
+                      <option>Medium</option>
+                      <option>High</option>
+                    </select>
+                    <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
+                  </div>
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Risk Level</label>
-                <div className="relative">
-                  <select className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 appearance-none">
-                    <option>Low</option>
-                    <option>Medium</option>
-                    <option>High</option>
-                  </select>
-                  <ChevronDown size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 pointer-events-none" />
-                </div>
+                <label className="block text-sm text-gray-400 mb-1">Natural Language Strategy</label>
+                <textarea
+                  placeholder="E.g., Buy when price increases 5% over 1 hour, sell when profit exceeds 10% or loss exceeds 2%..."
+                  rows={4}
+                  value={formData.naturalLanguageStrategy}
+                  onChange={(e) => setFormData({...formData, naturalLanguageStrategy: e.target.value})}
+                  className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+                ></textarea>
+                <p className="mt-1 text-xs text-gray-500">Alith will convert your natural language to an optimized strategy</p>
+              </div>
+              
+              <div className="flex space-x-2">
+                <button 
+                  onClick={handleCreateStrategy}
+                  className="flex-1 btn btn-primary"
+                >
+                  <BrainCircuit size={16} className="mr-1.5" />
+                  <span>Generate Strategy</span>
+                </button>
+                <button 
+                  onClick={() => setShowStrategyForm(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancel
+                </button>
               </div>
             </div>
-            
-            <div>
-              <label className="block text-sm text-gray-400 mb-1">Natural Language Strategy</label>
-              <textarea
-                placeholder="E.g., Buy when price increases 5% over 1 hour, sell when profit exceeds 10% or loss exceeds 2%..."
-                rows={4}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-              ></textarea>
-              <p className="mt-1 text-xs text-gray-500">Alith will convert your natural language to an optimized strategy</p>
-            </div>
-          </div>
+          )}
           
-          <button className="w-full btn btn-primary mb-4">
-            <BrainCircuit size={16} className="mr-1.5" />
-            <span>Generate Strategy</span>
-          </button>
-          
-          <div className="text-xs text-center text-gray-500">
+          <div className="text-xs text-center text-gray-500 mt-4">
             <span>All strategies run in parallel on Hyperion's high-performance network</span>
           </div>
         </div>
@@ -234,7 +277,7 @@ const AITrading: React.FC = () => {
       
       <div className="card">
         <div className="flex justify-between items-center p-4 border-b border-gray-700">
-          <h3 className="font-medium">Active Strategies</h3>
+          <h3 className="font-medium">Active Strategies ({strategies.length})</h3>
           <button className="text-xs text-indigo-400 hover:text-indigo-300">
             Import Strategy
           </button>
@@ -250,7 +293,9 @@ const AITrading: React.FC = () => {
                     <span className={`text-xs px-2 py-0.5 rounded ${
                       strategy.status === 'Active' 
                         ? 'bg-green-500/20 text-green-400' 
-                        : 'bg-gray-600/50 text-gray-400'
+                        : strategy.status === 'Paused'
+                        ? 'bg-gray-600/50 text-gray-400'
+                        : 'bg-amber-500/20 text-amber-400'
                     }`}>
                       {strategy.status}
                     </span>
@@ -259,13 +304,19 @@ const AITrading: React.FC = () => {
                 </div>
                 
                 <div className="flex space-x-2">
-                  <button className="btn btn-ghost text-xs">
+                  <button 
+                    onClick={() => cloneStrategy(strategy.id)}
+                    className="btn btn-ghost text-xs"
+                  >
                     <Copy size={14} className="mr-1" />
                     <span>Clone</span>
                   </button>
-                  <button className={`btn text-xs ${
-                    strategy.status === 'Active' ? 'btn-danger' : 'btn-success'
-                  }`}>
+                  <button 
+                    onClick={() => toggleStrategyStatus(strategy.id)}
+                    className={`btn text-xs ${
+                      strategy.status === 'Active' ? 'btn-danger' : 'btn-success'
+                    }`}
+                  >
                     {strategy.status === 'Active' ? (
                       <>
                         <Pause size={14} className="mr-1" />
@@ -277,6 +328,12 @@ const AITrading: React.FC = () => {
                         <span>Start</span>
                       </>
                     )}
+                  </button>
+                  <button 
+                    onClick={() => deleteStrategy(strategy.id)}
+                    className="btn btn-danger text-xs"
+                  >
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
@@ -297,9 +354,9 @@ const AITrading: React.FC = () => {
                 <div className="bg-gray-800 rounded p-2">
                   <p className="text-xs text-gray-400">Risk Level</p>
                   <p className={`text-sm font-medium ${
-                    strategy.risk === 'Low' ? 'text-green-500' : 
-                    strategy.risk === 'Medium' ? 'text-amber-500' : 'text-rose-500'
-                  }`}>{strategy.risk}</p>
+                    strategy.riskLevel === 'Low' ? 'text-green-500' : 
+                    strategy.riskLevel === 'Medium' ? 'text-amber-500' : 'text-rose-500'
+                  }`}>{strategy.riskLevel}</p>
                 </div>
               </div>
               
@@ -314,6 +371,19 @@ const AITrading: React.FC = () => {
               </div>
             </div>
           ))}
+          
+          {strategies.length === 0 && (
+            <div className="p-8 text-center">
+              <BrainCircuit size={48} className="mx-auto mb-4 text-gray-600" />
+              <p className="text-gray-400 mb-4">No strategies created yet</p>
+              <button 
+                onClick={() => setShowStrategyForm(true)}
+                className="btn btn-primary"
+              >
+                Create Your First Strategy
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

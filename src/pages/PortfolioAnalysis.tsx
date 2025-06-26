@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowUpRight, ArrowDownRight, Info, DollarSign } from 'lucide-react';
+import { ArrowUpRight, ArrowDownRight, Info, DollarSign, TrendingUp, BarChart3 } from 'lucide-react';
+import PortfolioChart from '../components/charts/PortfolioChart';
 
 const PortfolioAnalysis: React.FC = () => {
   const assets = [
@@ -41,11 +42,19 @@ const PortfolioAnalysis: React.FC = () => {
             </div>
           </div>
           
-          <div className="h-64 w-full rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center mb-6">
-            <div className="text-center">
-              <p className="text-gray-400">Portfolio performance chart</p>
-              <p className="text-xs text-gray-500">Historical balance over time</p>
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-medium">Portfolio Performance (30 Days)</h3>
+              <div className="flex space-x-2">
+                <button className="p-1.5 bg-indigo-600 rounded hover:bg-indigo-700">
+                  <TrendingUp size={16} />
+                </button>
+                <button className="p-1.5 bg-gray-700 rounded hover:bg-gray-600">
+                  <BarChart3 size={16} />
+                </button>
+              </div>
             </div>
+            <PortfolioChart height={300} type="area" />
           </div>
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
